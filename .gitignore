@@ -1,0 +1,23 @@
+# 대회 자료 제외
+이전대회자료/
+이번대회자료/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Python 캐시
+__pycache__/
+*.pyc
+
+# 가상환경
+venv/
+.venv/
+
+# 대용량 모델/데이터 파일
+*.csv
+*.npy
+*.pt
+*.h5
+*.onnx
+.env
