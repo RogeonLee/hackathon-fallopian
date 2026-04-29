@@ -1,0 +1,87 @@
+LGB 피처 수: 128,  XGB 피처 수: 128
+
+========================================
+[1/7] LGB_base_s42
+  Fold 0: 0.73127
+  Fold 1: 0.73711
+  Fold 2: 0.73328
+  Fold 3: 0.73219
+  Fold 4: 0.73410
+  ── OOF AUC: 0.73357
+
+========================================
+[2/7] LGB_base_s2024
+  Fold 0: 0.73090
+  Fold 1: 0.73690
+  Fold 2: 0.73316
+  Fold 3: 0.73181
+  Fold 4: 0.73444
+  ── OOF AUC: 0.73343
+
+========================================
+[3/7] LGB_base_s777
+  Fold 0: 0.73161
+  Fold 1: 0.73664
+  Fold 2: 0.73253
+  Fold 3: 0.73147
+  Fold 4: 0.73365
+  ── OOF AUC: 0.73317
+
+========================================
+[4/7] LGB_sh_s42
+  Fold 0: 0.73436
+  Fold 1: 0.73899
+  Fold 2: 0.73646
+  Fold 3: 0.73421
+  Fold 4: 0.73789
+  ── OOF AUC: 0.73637
+
+========================================
+[5/7] LGB_sh_s2024
+  Fold 0: 0.73438
+  Fold 1: 0.73909
+  Fold 2: 0.73672
+  Fold 3: 0.73423
+  Fold 4: 0.73786
+  ── OOF AUC: 0.73645
+
+========================================
+[6/7] XGB_d7_s42
+Traceback (most recent call last):
+  File "/Users/rogan/해커톤_난임 환자 대상 임신 성공 여부 예측 AI /이번대회자료/data/../../v16_fixed.py", line 211, in <module>
+    model.fit(X_tr, y_tr,
+  File "/Users/rogan/Library/Python/3.9/lib/python/site-packages/xgboost/core.py", line 726, in inner_f
+    return func(**kwargs)
+  File "/Users/rogan/Library/Python/3.9/lib/python/site-packages/xgboost/sklearn.py", line 1580, in fit
+    train_dmatrix, evals = _wrap_evaluation_matrices(
+  File "/Users/rogan/Library/Python/3.9/lib/python/site-packages/xgboost/sklearn.py", line 603, in _wrap_evaluation_matrices
+    train_dmatrix = create_dmatrix(
+  File "/Users/rogan/Library/Python/3.9/lib/python/site-packages/xgboost/sklearn.py", line 1065, in _create_dmatrix
+    return QuantileDMatrix(
+  File "/Users/rogan/Library/Python/3.9/lib/python/site-packages/xgboost/core.py", line 726, in inner_f
+    return func(**kwargs)
+  File "/Users/rogan/Library/Python/3.9/lib/python/site-packages/xgboost/core.py", line 1573, in __init__
+    self._init(
+  File "/Users/rogan/Library/Python/3.9/lib/python/site-packages/xgboost/core.py", line 1632, in _init
+    it.reraise()
+  File "/Users/rogan/Library/Python/3.9/lib/python/site-packages/xgboost/core.py", line 569, in reraise
+    raise exc  # pylint: disable=raising-bad-type
+  File "/Users/rogan/Library/Python/3.9/lib/python/site-packages/xgboost/core.py", line 550, in _handle_exception
+    return fn()
+  File "/Users/rogan/Library/Python/3.9/lib/python/site-packages/xgboost/core.py", line 637, in <lambda>
+    return self._handle_exception(lambda: self.next(input_data), 0)
+  File "/Users/rogan/Library/Python/3.9/lib/python/site-packages/xgboost/data.py", line 1402, in next
+    input_data(**self.kwargs)
+  File "/Users/rogan/Library/Python/3.9/lib/python/site-packages/xgboost/core.py", line 726, in inner_f
+    return func(**kwargs)
+  File "/Users/rogan/Library/Python/3.9/lib/python/site-packages/xgboost/core.py", line 617, in input_data
+    new, cat_codes, feature_names, feature_types = _proxy_transform(
+  File "/Users/rogan/Library/Python/3.9/lib/python/site-packages/xgboost/data.py", line 1447, in _proxy_transform
+    df, feature_names, feature_types = _transform_pandas_df(
+  File "/Users/rogan/Library/Python/3.9/lib/python/site-packages/xgboost/data.py", line 603, in _transform_pandas_df
+    pandas_check_dtypes(data, enable_categorical)
+  File "/Users/rogan/Library/Python/3.9/lib/python/site-packages/xgboost/data.py", line 569, in pandas_check_dtypes
+    _invalid_dataframe_dtype(data)
+  File "/Users/rogan/Library/Python/3.9/lib/python/site-packages/xgboost/data.py", line 356, in _invalid_dataframe_dtype
+    raise ValueError(msg)
+ValueError: DataFrame.dtypes for data must be int, float, bool or category. When categorical type is supplied, the experimental DMatrix parameter`enable_categorical` must be set to `True`.  Invalid columns:시술 시기 코드: category, 시술 당시 나이: category, 시술 유형: category, 특정 시술 유형: category, 배란 유도 유형: category, 배아 생성 주요 이유: category, 총 시술 횟수: category, 클리닉 내 총 시술 횟수: category, IVF 시술 횟수: category, DI 시술 횟수: category, 총 임신 횟수: category, IVF 임신 횟수: category, DI 임신 횟수: category, 총 출산 횟수: category, IVF 출산 횟수: category, DI 출산 횟수: category, 난자 출처: category, 정자 출처: category, 난자 기증자 나이: category, 정자 기증자 나이: category

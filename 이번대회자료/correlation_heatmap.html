@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=JetBrains+Mono:wght@500&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Noto Sans KR', sans-serif; background: #0c0f18; color: #e2e8f0; padding: 24px 20px; }
+  h1 { font-size: 13px; font-weight: 700; color: #94a3b8; letter-spacing: .1em; text-transform: uppercase; margin-bottom: 6px; }
+  .subtitle { font-size: 11px; color: #475569; margin-bottom: 20px; }
+
+  .legend-wrap { display: flex; align-items: center; gap: 10px; margin-bottom: 24px; }
+  .legend-label { font-size: 10px; color: #64748b; }
+  .legend-bar { width: 200px; height: 10px; border-radius: 4px;
+    background: linear-gradient(to right, #2563eb, #1e2433, #dc2626); }
+
+  .section-label { font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; padding: 4px 0 8px; }
+  .section-pos { color: #f87171; }
+  .section-neg { color: #60a5fa; margin-top: 20px; }
+
+  .bar-list { display: flex; flex-direction: column; gap: 3px; }
+  .bar-row { display: flex; align-items: center; gap: 8px; }
+  .feat-name { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #c8d6e5;
+    width: 220px; flex-shrink: 0; text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .bar-track { width: 260px; height: 18px; background: #1a1f2e; border-radius: 3px; overflow: hidden; flex-shrink: 0; position: relative; }
+  .bar-fill { height: 100%; border-radius: 3px; position: absolute; }
+  .bar-fill-pos { background: linear-gradient(to right, #7f1d1d, #dc2626); right: 50%; }
+  .bar-fill-neg { background: linear-gradient(to left,  #1e3a5f, #2563eb); left: 50%;  }
+  .center-line { position: absolute; left: 50%; top: 0; width: 1px; height: 100%; background: #2d3748; }
+  .corr-val { font-family: 'JetBrains Mono', monospace; font-size: 10px; width: 52px; flex-shrink: 0; }
+  .corr-pos { color: #f87171; }
+  .corr-neg { color: #60a5fa; }
+  .corr-zero { color: #475569; }
+
+  .insight-box { margin-top: 28px; background: #111422; border: 1px solid #1e2433; border-radius: 8px; padding: 16px 18px; }
+  .insight-title { font-size: 11px; font-weight: 700; color: #94a3b8; letter-spacing: .08em; text-transform: uppercase; margin-bottom: 12px; }
+  .insight-row { display: flex; gap: 8px; margin-bottom: 8px; align-items: flex-start; }
+  .insight-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
+  .insight-text { font-size: 11px; color: #94a3b8; line-height: 1.6; }
+  .hl { font-weight: 700; }
+  .hl-red { color: #f87171; }
+  .hl-blue { color: #60a5fa; }
+  .hl-yellow { color: #fbbf24; }
+</style>
+</head>
+<body>
+
+<h1>타겟(임신 성공 여부)과 피처 간 상관관계</h1>
+<p class="subtitle">Pearson 상관계수 기준 · 전체 256,351행 · 전처리 적용 후</p>
+
+<div class="legend-wrap">
+  <span class="legend-label">음(-) 상관</span>
+  <div class="legend-bar"></div>
+  <span class="legend-label">양(+) 상관</span>
+</div>
+
+<div id="chart"></div>
+
+<div class="insight-box">
+  <div class="insight-title">📌 주요 해석</div>
+  <div class="insight-row">
+    <div class="insight-dot" style="background:#f87171"></div>
+    <div class="insight-text"><span class="hl hl-red">이식된 배아 수(+0.159), 배아 이식 경과일(+0.157), 총 생성 배아 수(+0.146)</span>이 가장 강한 양의 상관관계. 배아 수와 품질이 임신 성공의 핵심 인자임을 확인.</div>
+  </div>
+  <div class="insight-row">
+    <div class="insight-dot" style="background:#f87171"></div>
+    <div class="insight-text"><span class="hl hl-red">단일 배아 이식 여부(+0.135)</span>가 높은 양의 상관. 단일 배아 이식이 성공률에 긍정적 신호.</div>
+  </div>
+  <div class="insight-row">
+    <div class="insight-dot" style="background:#60a5fa"></div>
+    <div class="insight-text"><span class="hl hl-blue">시술 당시 나이(-0.151)</span>가 가장 강한 음의 상관. 나이↑ 성공률↓ 관계 명확히 확인.</div>
+  </div>
+  <div class="insight-row">
+    <div class="insight-dot" style="background:#60a5fa"></div>
+    <div class="insight-text"><span class="hl hl-blue">총 시술 횟수(-0.059), IVF 시술 횟수(-0.056), 클리닉 내 총 시술 횟수(-0.053)</span> 음의 상관. 반복 시술일수록 성공률 감소.</div>
+  </div>
+  <div class="insight-row">
+    <div class="insight-dot" style="background:#fbbf24"></div>
+    <div class="insight-text"><span class="hl hl-yellow">불임 원인 관련 피처들(±0.01~0.04)</span>은 상관관계가 매우 낮음. 단독으로는 예측력이 약하지만 조합 피처로 활용 가능.</div>
+  </div>
+</div>
+
+<script>
+const DATA = [
+  ["이식된 배아 수", 0.1592],
+  ["배아 이식 경과일", 0.1571],
+  ["총 생성 배아 수", 0.1465],
+  ["단일 배아 이식 여부", 0.1351],
+  ["혼합된 난자 수", 0.1159],
+  ["파트너 정자와 혼합된 난자 수", 0.1052],
+  ["미세주입에서 생성된 배아 수", 0.0941],
+  ["수집된 신선 난자 수", 0.0829],
+  ["미세주입 배아 이식 수", 0.0791],
+  ["배아 생성 주요 이유", 0.0776],
+  ["미세주입된 난자 수", 0.0745],
+  ["시술 유형", 0.0469],
+  ["저장된 배아 수", 0.0391],
+  ["불임 원인 - 남성 요인", 0.0379],
+  ["난자_기증자_사용여부", 0.0359],
+  ["배란 자극 여부", 0.0332],
+  ["신선 배아 사용 여부", 0.0282],
+  ["기증자 정자와 혼합된 난자 수", 0.0275],
+  ["불임 원인 - 배란 장애", 0.0250],
+  ["미세주입 후 저장된 배아 수", 0.0240],
+  ["기증 배아 사용 여부", 0.0155],
+  ["정자 출처", 0.0118],
+  ["IVF 출산 횟수", 0.0097],
+  ["총 출산 횟수", 0.0077],
+  ["IVF 임신 횟수", 0.0051],
+  ["대리모 여부", 0.0045],
+  ["총 임신 횟수", 0.0027],
+  ["불명확 불임 원인", 0.0015],
+  ["불임 원인 - 난관 질환", -0.0005],
+  ["불임 원인 - 정자 농도", -0.0006],
+  ["해동 난자 수", -0.0016],
+  ["불임 원인 - 정자 형태", -0.0019],
+  ["불임 원인 - 자궁내막증", -0.0022],
+  ["불임 원인 - 정자 운동성", -0.0037],
+  ["난자 혼합 경과일", -0.0060],
+  ["DI 출산 횟수", -0.0062],
+  ["DI 임신 횟수", -0.0085],
+  ["정자_기증자_사용여부", -0.0110],
+  ["해동된 배아 수", -0.0124],
+  ["남성 주 불임 원인", -0.0150],
+  ["부부 부 불임 원인", -0.0153],
+  ["여성 주 불임 원인", -0.0159],
+  ["남성 부 불임 원인", -0.0160],
+  ["여성 부 불임 원인", -0.0160],
+  ["부부 주 불임 원인", -0.0161],
+  ["착상 전 유전 진단 사용 여부", -0.0170],
+  ["DI 시술 횟수", -0.0171],
+  ["동결 배아 사용 여부", -0.0285],
+  ["특정 시술 유형", -0.0300],
+  ["배란 유도 유형", -0.0407],
+  ["저장된 신선 난자 수", -0.0467],
+  ["난자 출처", -0.0525],
+  ["클리닉 내 총 시술 횟수", -0.0528],
+  ["IVF 시술 횟수", -0.0559],
+  ["총 시술 횟수", -0.0589],
+  ["시술 당시 나이", -0.1505],
+];
+
+const MAX_ABS = 0.16;
+
+function colorAlpha(val) {
+  const abs = Math.abs(val) / MAX_ABS;
+  return Math.max(0.15, abs);
+}
+
+let html = '';
+DATA.forEach(([name, val]) => {
+  const pct = Math.abs(val) / MAX_ABS * 50; // max 50% from center
+  const isPos = val >= 0;
+  const colorClass = Math.abs(val) < 0.005 ? 'corr-zero' : isPos ? 'corr-pos' : 'corr-neg';
+  const sign = val > 0 ? '+' : '';
+
+  let barStyle = '';
+  if (isPos) {
+    barStyle = `right:50%;width:${pct}%;`;
+  } else {
+    barStyle = `left:50%;width:${pct}%;`;
+  }
+
+  html += `<div class="bar-row">
+    <div class="feat-name" title="${name}">${name}</div>
+    <div class="bar-track">
+      <div class="center-line"></div>
+      <div class="bar-fill ${isPos ? 'bar-fill-pos' : 'bar-fill-neg'}" style="${barStyle}"></div>
+    </div>
+    <div class="corr-val ${colorClass}">${sign}${val.toFixed(4)}</div>
+  </div>`;
+});
+
+document.getElementById('chart').innerHTML = `<div class="bar-list">${html}</div>`;
+</script>
+</body>
+</html>

@@ -1,0 +1,23 @@
+=================================================================
+[전략 3] AG 내부 상위 모델 추출 + 정밀 블렌딩
+=================================================================
+
+[1] AG8h 모델 로드...
+                   model  score_val
+0    WeightedEnsemble_L2   0.741139
+1    LightGBM_r96_BAG_L1   0.740109
+2   CatBoost_r167_BAG_L1   0.740097
+3    LightGBM_r15_BAG_L1   0.740040
+4   CatBoost_r198_BAG_L1   0.740016
+5    CatBoost_r86_BAG_L1   0.740009
+6      LightGBMXT_BAG_L1   0.739986
+7    CatBoost_r69_BAG_L1   0.739984
+8        CatBoost_BAG_L1   0.739954
+9   CatBoost_r137_BAG_L1   0.739932
+10   LightGBM_r94_BAG_L1   0.739907
+11   CatBoost_r13_BAG_L1   0.739894
+12   CatBoost_r60_BAG_L1   0.739889
+13  CatBoost_r143_BAG_L1   0.739874
+14   CatBoost_r70_BAG_L1   0.739854
+
+[2] 상위 모델 개별 테스트 예측 추출...

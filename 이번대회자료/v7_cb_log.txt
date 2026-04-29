@@ -1,0 +1,20 @@
+CatBoost 단독 실행 (NaN → 'missing' 수정)
+  카테고리 피처: 10개
+  CB Seed    42: 0.73979
+  CB Seed  2024: 0.73981
+  CB Seed   777: 0.73986
+  CB Seed  1234: 0.73995
+  CB Seed 31337: 0.73987
+  CatBoost 앙상블 OOF AUC: 0.74023
+
+  v5 OOF AUC:  0.74074
+  CB OOF AUC:  0.74023
+
+  블렌딩 OOF AUC:
+    v5 only:    0.74074
+    70% v5 + 30% CB: 0.74076
+    50% v5 + 50% CB: 0.74069
+
+  저장: submission_20260425_0000_v7_oof0.74076.csv (70-30blend)
+
+  v4 기준선 대비: +0.00043

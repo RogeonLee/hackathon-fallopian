@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=JetBrains+Mono:wght@500&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Noto Sans KR', sans-serif; background: #0f1117; color: #e2e8f0; padding: 32px 24px; }
+  h1 { font-size: 14px; font-weight: 700; color: #94a3b8; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 20px; }
+  .legend { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 24px; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: #94a3b8; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .section { margin-bottom: 28px; border-radius: 8px; overflow: hidden; }
+  .section-title { font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; padding: 8px 14px; display: flex; align-items: center; gap: 8px; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  th { color: #64748b; font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; padding: 8px 14px; text-align: left; border-bottom: 1px solid #2d3748; background: #1a1f2e; }
+  td { padding: 9px 14px; border-bottom: 1px solid #1a1f2e; vertical-align: middle; line-height: 1.6; }
+  tr:last-child td { border-bottom: none; }
+  .col-name { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #c8d6e5; }
+  .reason { color: #64748b; font-size: 11px; }
+  .tag { display: inline-block; padding: 2px 7px; border-radius: 4px; font-size: 10px; font-weight: 600; }
+  .tag-drop   { background: #3f1f1f; color: #f87171; }
+  .tag-encode { background: #1f2f3f; color: #60a5fa; }
+  .tag-impute { background: #1f3f2f; color: #34d399; }
+  .tag-new    { background: #2f2f1f; color: #fbbf24; }
+  .tag-flag   { background: #2f1f3f; color: #a78bfa; }
+  .bar-wrap { display: flex; align-items: center; gap: 6px; }
+  .bar { height: 4px; border-radius: 2px; background: #2d3748; width: 64px; flex-shrink: 0; }
+  .bar-fill { height: 100%; border-radius: 2px; background: #ef4444; }
+  .bar-text { font-size: 10px; color: #64748b; }
+  .s-drop   .section-title { background: #2a1515; color: #f87171; }
+  .s-drop   table { background: #140e0e; }
+  .s-encode .section-title { background: #152030; color: #60a5fa; }
+  .s-encode table { background: #0e1520; }
+  .s-impute .section-title { background: #152a20; color: #34d399; }
+  .s-impute table { background: #0e1a14; }
+  .s-new    .section-title { background: #2a2510; color: #fbbf24; }
+  .s-new    table { background: #1a1a0e; }
+</style>
+</head>
+<body>
+<h1>피처 전처리 요약표</h1>
+<div class="legend">
+  <div class="legend-item"><div class="dot" style="background:#f87171"></div> 제거 (DROP)</div>
+  <div class="legend-item"><div class="dot" style="background:#60a5fa"></div> 인코딩 (ENCODE)</div>
+  <div class="legend-item"><div class="dot" style="background:#34d399"></div> 결측치 대체 (IMPUTE)</div>
+  <div class="legend-item"><div class="dot" style="background:#fbbf24"></div> 신규 생성 (NEW)</div>
+</div>
+
+<div class="section s-drop">
+  <div class="section-title">🗑️ 제거된 피처</div>
+  <table>
+    <tr><th style="width:36%">피처명</th><th style="width:16%">결측치</th><th>제거 이유</th></tr>
+    <tr><td class="col-name">ID</td><td><span class="bar-text">0%</span></td><td class="reason">단순 식별자, 모델 정보 없음</td></tr>
+    <tr><td class="col-name">시술 시기 코드</td><td><span class="bar-text">0%</span></td><td class="reason">익명화 코드, 임상 의미 없음</td></tr>
+    <tr><td class="col-name">난자 해동 경과일</td><td><div class="bar-wrap"><div class="bar"><div class="bar-fill" style="width:99%"></div></div><span class="bar-text">99.4%</span></div></td><td class="reason">결측 99% 이상 → 정보 없음</td></tr>
+    <tr><td class="col-name">PGS 시술 여부</td><td><div class="bar-wrap"><div class="bar"><div class="bar-fill" style="width:99%"></div></div><span class="bar-text">99.2%</span></div></td><td class="reason">결측 99% 이상 → 정보 없음</td></tr>
+    <tr><td class="col-name">PGD 시술 여부</td><td><div class="bar-wrap"><div class="bar"><div class="bar-fill" style="width:99%"></div></div><span class="bar-text">99.1%</span></div></td><td class="reason">결측 99% 이상 → 정보 없음</td></tr>
+    <tr><td class="col-name">착상 전 유전 검사 사용 여부</td><td><div class="bar-wrap"><div class="bar"><div class="bar-fill" style="width:99%"></div></div><span class="bar-text">98.9%</span></div></td><td class="reason">결측 99% 이상 → 정보 없음</td></tr>
+    <tr><td class="col-name">임신 시도/마지막 임신 경과 연수</td><td><div class="bar-wrap"><div class="bar"><div class="bar-fill" style="width:96%"></div></div><span class="bar-text">96.3%</span></div></td><td class="reason">결측 96% → 대체해도 신뢰 불가</td></tr>
+    <tr><td class="col-name">배아 해동 경과일</td><td><div class="bar-wrap"><div class="bar"><div class="bar-fill" style="width:84%"></div></div><span class="bar-text">84.3%</span></div></td><td class="reason">결측 84% → 대체해도 신뢰 불가</td></tr>
+    <tr><td class="col-name">불임 원인 - 여성 요인</td><td><span class="bar-text">0%</span></td><td class="reason">전체 값이 0 (분산 = 0, 무의미)</td></tr>
+    <tr><td class="col-name">불임 원인 - 자궁경부 문제</td><td><span class="bar-text">0%</span></td><td class="reason">99.99% 이상 0 (분산 ≈ 0)</td></tr>
+    <tr><td class="col-name">불임 원인 - 정자 면역학적 요인</td><td><span class="bar-text">0%</span></td><td class="reason">99.99% 이상 0 (분산 ≈ 0)</td></tr>
+  </table>
+</div>
+
+<div class="section s-encode">
+  <div class="section-title">🔢 인코딩 · 수치 변환</div>
+  <table>
+    <tr><th style="width:36%">피처명</th><th style="width:28%">처리 방법</th><th>이유</th></tr>
+    <tr>
+      <td class="col-name">시술 당시 나이</td>
+      <td><span class="tag tag-encode">Ordinal Encoding</span><br><span style="font-size:10px;color:#475569">만18-34→1 … 만45-50→6 / 알수없음→3</span></td>
+      <td class="reason">나이↑ 성공률↓ 단조 관계<br>(Sunkara et al., 2011 Hum Reprod)</td>
+    </tr>
+    <tr>
+      <td class="col-name">총/IVF/DI 시술·임신·출산 횟수<br><span style="color:#475569;font-size:10px">(10개 컬럼)</span></td>
+      <td><span class="tag tag-encode">Text → Int</span><br><span style="font-size:10px;color:#475569">"3회"→3 / "6회 이상"→6</span></td>
+      <td class="reason">반복 시술 횟수↑ 성공률↓<br>(Domar et al., 2012)</td>
+    </tr>
+    <tr>
+      <td class="col-name">시술 유형 / 특정 시술 유형<br>배란 유도 유형 / 배아 생성 주요 이유<br>난자 출처 / 정자 출처</td>
+      <td><span class="tag tag-encode">Label Encoding</span></td>
+      <td class="reason">카테고리 2~10개로 적음<br>XGBoost/LightGBM에 적합</td>
+    </tr>
+    <tr>
+      <td class="col-name">난자 기증자 나이 / 정자 기증자 나이</td>
+      <td><span class="tag tag-encode">Ordinal Encoding</span><br><span style="font-size:10px;color:#475569">알수없음 → 최빈값 대체</span></td>
+      <td class="reason">기증자 나이 → 배아 품질 영향<br>(Kawwass et al., 2013 JAMA)</td>
+    </tr>
+  </table>
+</div>
+
+<div class="section s-impute">
+  <div class="section-title">🔧 결측치 대체 (중앙값)</div>
+  <table>
+    <tr><th style="width:36%">피처명</th><th style="width:16%">결측치</th><th>처리 방법</th></tr>
+    <tr>
+      <td class="col-name">난자 채취 경과일</td>
+      <td><div class="bar-wrap"><div class="bar"><div class="bar-fill" style="width:22%"></div></div><span class="bar-text">22.4%</span></div></td>
+      <td class="reason">중앙값 대체 + <span class="tag tag-flag">결측여부 이진 피처 생성</span></td>
+    </tr>
+    <tr>
+      <td class="col-name">난자 혼합 경과일</td>
+      <td><div class="bar-wrap"><div class="bar"><div class="bar-fill" style="width:21%"></div></div><span class="bar-text">21.0%</span></div></td>
+      <td class="reason">중앙값 대체 + <span class="tag tag-flag">결측여부 이진 피처 생성</span></td>
+    </tr>
+    <tr>
+      <td class="col-name">배아 이식 경과일</td>
+      <td><div class="bar-wrap"><div class="bar"><div class="bar-fill" style="width:17%"></div></div><span class="bar-text">17.0%</span></div></td>
+      <td class="reason">중앙값 대체 + <span class="tag tag-flag">결측여부 이진 피처 생성</span></td>
+    </tr>
+    <tr>
+      <td class="col-name">배아 수 관련 전체 컬럼<br><span style="color:#475569;font-size:10px">(총 생성, 이식, 저장, 해동 등)</span></td>
+      <td><div class="bar-wrap"><div class="bar"><div class="bar-fill" style="width:2.5%"></div></div><span class="bar-text">2.5%</span></div></td>
+      <td class="reason">중앙값 대체<br><span style="font-size:10px;color:#475569">의료 데이터는 이상치 多 → 평균보다 안정적 (Royston & White, 2011)</span></td>
+    </tr>
+  </table>
+</div>
+
+<div class="section s-new">
+  <div class="section-title">✨ 신규 생성 피처 (Feature Engineering)</div>
+  <table>
+    <tr><th style="width:36%">새 피처명</th><th style="width:28%">계산 방법</th><th>근거 논문</th></tr>
+    <tr>
+      <td class="col-name">배아_이식_효율</td>
+      <td style="font-size:11px">이식된 배아 수 ÷ (총 생성 배아 수 + 1)</td>
+      <td class="reason">배아 품질·활용도 지표<br>(Templeton & Morris, 1998 Lancet)</td>
+    </tr>
+    <tr>
+      <td class="col-name">미세주입_배아_비율</td>
+      <td style="font-size:11px">미세주입 생성 배아 수 ÷ (총 생성 배아 수 + 1)</td>
+      <td class="reason">ICSI 활용 비율 → 남성 불임 보정<br>(Palermo et al., 1992 Lancet)</td>
+    </tr>
+    <tr>
+      <td class="col-name">고령_여부</td>
+      <td style="font-size:11px">나이 ≥ 3 (만38세↑) → 1 / 그 외 → 0</td>
+      <td class="reason">38세 이상 성공률 급감<br>(ASRM 가이드라인 / Sunkara, 2011)</td>
+    </tr>
+    <tr>
+      <td class="col-name">반복_시술_여부</td>
+      <td style="font-size:11px">총 시술 횟수 ≥ 3 → 1 / 그 외 → 0</td>
+      <td class="reason">3회↑ 반복 시술 성공률 감소<br>(Domar et al., 2012 Fertil Steril)</td>
+    </tr>
+    <tr>
+      <td class="col-name">이전_출산_경험</td>
+      <td style="font-size:11px">총 출산 횟수 > 0 → 1 / 그 외 → 0</td>
+      <td class="reason">출산 경험자 IVF 성공률 유의하게 높음<br>(Toner et al., 1991 Fertil Steril)</td>
+    </tr>
+    <tr>
+      <td class="col-name">본인_난자_여부</td>
+      <td style="font-size:11px">난자 출처 = 본인 → 1 / 기증 → 0</td>
+      <td class="reason">난자 출처별 성공률 차이<br>(Kawwass et al., 2013 JAMA)</td>
+    </tr>
+  </table>
+</div>
+
+</body>
+</html>

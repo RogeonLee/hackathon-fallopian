@@ -1,0 +1,27 @@
+=================================================================
+[전략 2] Pseudo-labeling (AG8h 고신뢰도)
+  POS threshold: 0.82, NEG threshold: 0.07
+=================================================================
+  Pseudo-label 후보: 양성 16178개, 음성 6258개 (총 22436개 / 90067개)
+  증강 학습 데이터: 278787행 (원본 256351 + pseudo 22436)
+
+[2] Pseudo-label LGBM 5-Seed × 5-Fold (원본 데이터만 OOF 평가)...
+Traceback (most recent call last):
+  File "/Users/rogan/해커톤_난임 환자 대상 임신 성공 여부 예측 AI /이번대회자료/17_pseudo_label.py", line 134, in <module>
+    this_test      += m.predict_proba(X_test_final)[:, 1] / N_FOLDS
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/rogan/해커톤_난임 환자 대상 임신 성공 여부 예측 AI /.venv/lib/python3.12/site-packages/lightgbm/sklearn.py", line 1627, in predict_proba
+    result = super().predict(
+             ^^^^^^^^^^^^^^^^
+  File "/Users/rogan/해커톤_난임 환자 대상 임신 성공 여부 예측 AI /.venv/lib/python3.12/site-packages/lightgbm/sklearn.py", line 1144, in predict
+    return self._Booster.predict(  # type: ignore[union-attr]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/rogan/해커톤_난임 환자 대상 임신 성공 여부 예측 AI /.venv/lib/python3.12/site-packages/lightgbm/basic.py", line 4767, in predict
+    return predictor.predict(
+           ^^^^^^^^^^^^^^^^^^
+  File "/Users/rogan/해커톤_난임 환자 대상 임신 성공 여부 예측 AI /.venv/lib/python3.12/site-packages/lightgbm/basic.py", line 1158, in predict
+    data = _data_from_pandas(
+           ^^^^^^^^^^^^^^^^^^
+  File "/Users/rogan/해커톤_난임 환자 대상 임신 성공 여부 예측 AI /.venv/lib/python3.12/site-packages/lightgbm/basic.py", line 851, in _data_from_pandas
+    raise ValueError("train and valid dataset categorical_feature do not match.")
+ValueError: train and valid dataset categorical_feature do not match.

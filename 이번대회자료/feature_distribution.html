@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=JetBrains+Mono:wght@500&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Noto Sans KR',sans-serif;background:#0c0f18;color:#e2e8f0;min-height:100vh}
+  /* 상단 헤더 */
+  .header{background:#111422;border-bottom:1px solid #1e2433;padding:16px 20px;position:sticky;top:0;z-index:100}
+  .header h1{font-size:14px;font-weight:700;color:#94a3b8;letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px}
+  .controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .search{background:#1a1f2e;border:1px solid #2d3748;border-radius:6px;padding:6px 12px;color:#e2e8f0;font-size:12px;width:200px;font-family:'Noto Sans KR',sans-serif}
+  .search:focus{outline:none;border-color:#3b82f6}
+  .filter-btn{background:#1a1f2e;border:1px solid #2d3748;border-radius:6px;padding:5px 12px;color:#94a3b8;font-size:11px;cursor:pointer;transition:all .15s}
+  .filter-btn:hover,.filter-btn.active{background:#2d3748;color:#e2e8f0;border-color:#475569}
+  .filter-btn.active{background:#1e3a5f;border-color:#3b82f6;color:#60a5fa}
+  .count-badge{font-size:11px;color:#475569;margin-left:auto}
+
+  /* 그리드 */
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;padding:16px}
+
+  /* 카드 */
+  .card{background:#111422;border:1px solid #1e2433;border-radius:10px;overflow:hidden;transition:border-color .15s}
+  .card:hover{border-color:#2d3748}
+  .card-header{padding:12px 14px 8px;display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+  .col-name{font-family:'JetBrains Mono',monospace;font-size:11px;color:#c8d6e5;font-weight:500;line-height:1.4}
+  .badges{display:flex;gap:4px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end}
+  .badge{display:inline-block;padding:2px 6px;border-radius:3px;font-size:9px;font-weight:700;letter-spacing:.04em;white-space:nowrap}
+  .badge-cat  {background:#1e3a2a;color:#34d399}
+  .badge-num  {background:#1e2f4a;color:#60a5fa}
+  .badge-drop {background:#3f1f1f;color:#f87171}
+  .badge-zero {background:#2f1a0f;color:#f59e0b}
+
+  /* 통계 */
+  .stats{display:flex;gap:0;border-top:1px solid #1a1f2e;border-bottom:1px solid #1a1f2e}
+  .stat{flex:1;padding:6px 8px;text-align:center;border-right:1px solid #1a1f2e}
+  .stat:last-child{border-right:none}
+  .stat-label{font-size:9px;color:#475569;text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px}
+  .stat-value{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:500}
+  .stat-value.red{color:#f87171}
+  .stat-value.green{color:#34d399}
+  .stat-value.blue{color:#60a5fa}
+  .stat-value.gray{color:#64748b}
+
+  /* 결측치 바 */
+  .missing-row{padding:6px 14px;display:flex;align-items:center;gap:8px}
+  .missing-label{font-size:10px;color:#475569;width:36px;flex-shrink:0}
+  .missing-track{flex:1;height:5px;background:#1e2433;border-radius:3px;overflow:hidden}
+  .missing-fill{height:100%;border-radius:3px;transition:width .3s}
+  .missing-pct{font-family:'JetBrains Mono',monospace;font-size:10px;width:42px;text-align:right;flex-shrink:0}
+
+  /* 차트 */
+  .chart-area{padding:10px 14px 12px}
+  .chart-title{font-size:10px;color:#475569;margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em}
+  .bar-chart{display:flex;flex-direction:column;gap:4px}
+  .bar-row{display:flex;align-items:center;gap:6px}
+  .bar-key{font-size:10px;color:#94a3b8;width:110px;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .bar-track{flex:1;height:14px;background:#1a1f2e;border-radius:3px;overflow:hidden;position:relative}
+  .bar-fill-cat{height:100%;border-radius:3px;background:#2563eb;opacity:.85}
+  .bar-val{font-family:'JetBrains Mono',monospace;font-size:9px;color:#64748b;width:52px;text-align:right;flex-shrink:0}
+  /* 히스토그램 */
+  .hist-wrap{display:flex;align-items:flex-end;gap:1px;height:60px}
+  .hist-bar{flex:1;background:#2563eb;opacity:.8;border-radius:1px 1px 0 0;min-width:2px;transition:opacity .15s}
+  .hist-bar:hover{opacity:1}
+  .hist-axis{display:flex;justify-content:space-between;margin-top:3px}
+  .hist-axis span{font-size:9px;color:#475569}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>피처 분포 뷰어 — 전체 256,351행</h1>
+  <div class="controls">
+    <input class="search" type="text" placeholder="피처 검색..." id="searchInput">
+    <button class="filter-btn active" data-filter="all">전체</button>
+    <button class="filter-btn" data-filter="categorical">범주형</button>
+    <button class="filter-btn" data-filter="numeric">수치형</button>
+    <button class="filter-btn" data-filter="drop">제거 대상</button>
+    <button class="filter-btn" data-filter="zero">분산=0</button>
+    <span class="count-badge" id="countBadge"></span>
+  </div>
+</div>
+
+<div class="grid" id="grid"></div>
+
+<script>
+const DATA = {"시술 당시 나이": {"type": "categorical", "total": 256351, "valid": 256351, "missing": 0, "values": {"만18-34세": 102476, "만35-37세": 57780, "만38-39세": 39247, "만40-42세": 37348, "만43-44세": 12253, "만45-50세": 6918, "알 수 없음": 329}}, "시술 유형": {"type": "categorical", "total": 256351, "valid": 256351, "missing": 0, "values": {"IVF": 250060, "DI": 6291}}, "특정 시술 유형": {"type": "categorical", "total": 256351, "valid": 256349, "missing": 2, "values": {"ICSI": 122368, "IVF": 91755, "Unknown": 26939, "IUI": 6100, "ICSI:ICSI": 2314, "ICSI / BLASTOCYST ": 1609, "IVF / BLASTOCYST": 1248, "IVF:IVF": 1146, "ICSI:IVF": 873, "ICSI / AH": 769}}, "배란 유도 유형": {"type": "categorical", "total": 256351, "valid": 256351, "missing": 0, "values": {"기록되지 않은 시행": 194432, "알 수 없음": 61917, "세트로타이드 (억제제)": 1, "생식선 자극 호르몬": 1}}, "배아 생성 주요 이유": {"type": "categorical", "total": 256351, "valid": 250060, "missing": 6291, "values": {"현재 시술용": 233732, "배아 저장용": 9192, "기증용, 현재 시술용": 3784, "난자 저장용": 1959, "기증용": 1108}}, "총 시술 횟수": {"type": "categorical", "total": 256351, "valid": 256351, "missing": 0, "values": {"0회": 97599, "1회": 56819, "2회": 39338, "3회": 24531, "4회": 15141, "6회 이상": 13817, "5회": 9106}}, "클리닉 내 총 시술 횟수": {"type": "categorical", "total": 256351, "valid": 256351, "missing": 0, "values": {"0회": 121675, "1회": 59753, "2회": 34562, "3회": 18357, "4회": 10018, "6회 이상": 6590, "5회": 5396}}, "IVF 시술 횟수": {"type": "categorical", "total": 256351, "valid": 256351, "missing": 0, "values": {"0회": 103934, "1회": 58339, "2회": 39177, "3회": 23280, "4회": 13660, "6회 이상": 10159, "5회": 7802}}, "DI 시술 횟수": {"type": "categorical", "total": 256351, "valid": 256351, "missing": 0, "values": {"0회": 242464, "3회": 3116, "2회": 3006, "1회": 2920, "6회 이상": 1917, "4회": 1727, "5회": 1201}}, "총 임신 횟수": {"type": "categorical", "total": 256351, "valid": 256351, "missing": 0, "values": {"0회": 205426, "1회": 43829, "2회": 6246, "3회": 746, "4회": 93, "5회": 8, "6회 이상": 3}}, "IVF 임신 횟수": {"type": "categorical", "total": 256351, "valid": 256351, "missing": 0, "values": {"0회": 208292, "1회": 41519, "2회": 5788, "3회": 663, "4회": 81, "5회": 7, "6회 이상": 1}}, "DI 임신 횟수": {"type": "categorical", "total": 256351, "valid": 256351, "missing": 0, "values": {"0회": 253302, "1회": 2625, "2회": 368, "3회": 48, "4회": 5, "5회": 3}}, "총 출산 횟수": {"type": "categorical", "total": 256351, "valid": 256351, "missing": 0, "values": {"0회": 218555, "1회": 35369, "2회": 2242, "3회": 169, "4회": 13, "6회 이상": 2, "5회": 1}}, "IVF 출산 횟수": {"type": "categorical", "total": 256351, "valid": 256351, "missing": 0, "values": {"0회": 220831, "1회": 33348, "2회": 2021, "3회": 137, "4회": 13, "5회": 1}}, "DI 출산 횟수": {"type": "categorical", "total": 256351, "valid": 256351, "missing": 0, "values": {"0회": 254009, "1회": 2138, "2회": 183, "3회": 19, "5회": 2}}, "난자 출처": {"type": "categorical", "total": 256351, "valid": 256351, "missing": 0, "values": {"본인 제공": 234291, "기증 제공": 15769, "알 수 없음": 6291}}, "정자 출처": {"type": "categorical", "total": 256351, "valid": 256351, "missing": 0, "values": {"배우자 제공": 229199, "기증 제공": 27016, "미할당": 122, "배우자 및 기증 제공": 14}}, "난자 기증자 나이": {"type": "categorical", "total": 256351, "valid": 256351, "missing": 0, "values": {"알 수 없음": 242381, "만31-35세": 6366, "만26-30세": 4976, "만21-25세": 2334, "만20세 이하": 294}}, "정자 기증자 나이": {"type": "categorical", "total": 256351, "valid": 256351, "missing": 0, "values": {"알 수 없음": 230518, "만21-25세": 5667, "만36-40세": 5282, "만26-30세": 5058, "만31-35세": 4911, "만41-45세": 3848, "만20세 이하": 1067}}, "임신 시도 또는 마지막 임신 경과 연수": {"type": "numeric", "total": 256351, "valid": 9370, "missing": 246981, "min": 0.0, "max": 20.0, "mean": 9.271, "median": 9.0, "hist_counts": [18, 21, 89, 305, 692, 991, 1214, 1176, 1023, 947, 701, 510, 481, 331, 254, 202, 140, 106, 86, 83], "hist_labels": ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "20"]}, "배란 자극 여부": {"type": "numeric", "total": 256351, "valid": 256351, "missing": 0, "min": 0.0, "max": 1.0, "mean": 0.771, "median": 1.0, "hist_counts": [58631, 197720], "hist_labels": ["0", "1"]}, "단일 배아 이식 여부": {"type": "numeric", "total": 256351, "valid": 250060, "missing": 6291, "min": 0.0, "max": 1.0, "mean": 0.233, "median": 0.0, "hist_counts": [191677, 58383], "hist_labels": ["0", "1"]}, "착상 전 유전 진단 사용 여부": {"type": "numeric", "total": 256351, "valid": 250060, "missing": 6291, "min": 0.0, "max": 1.0, "mean": 0.013, "median": 0.0, "hist_counts": [246864, 3196], "hist_labels": ["0", "1"]}, "남성 주 불임 원인": {"type": "numeric", "total": 256351, "valid": 256351, "missing": 0, "min": 0.0, "max": 1.0, "mean": 0.029, "median": 0.0, "hist_counts": [249041, 7310], "hist_labels": ["0", "1"]}, "남성 부 불임 원인": {"type": "numeric", "total": 256351, "valid": 256351, "missing": 0, "min": 0.0, "max": 1.0, "mean": 0.013, "median": 0.0, "hist_counts": [252989, 3362], "hist_labels": ["0", "1"]}, "여성 주 불임 원인": {"type": "numeric", "total": 256351, "valid": 256351, "missing": 0, "min": 0.0, "max": 1.0, "mean": 0.031, "median": 0.0, "hist_counts": [248475, 7876], "hist_labels": ["0", "1"]}, "여성 부 불임 원인": {"type": "numeric", "total": 256351, "valid": 256351, "missing": 0, "min": 0.0, "max": 1.0, "mean": 0.012, "median": 0.0, "hist_counts": [253164, 3187], "hist_labels": ["0", "1"]}, "부부 주 불임 원인": {"type": "numeric", "total": 256351, "valid": 256351, "missing": 0, "min": 0.0, "max": 1.0, "mean": 0.033, "median": 0.0, "hist_counts": [247874, 8477], "hist_labels": ["0", "1"]}, "부부 부 불임 원인": {"type": "numeric", "total": 256351, "valid": 256351, "missing": 0, "min": 0.0, "max": 1.0, "mean": 0.009, "median": 0.0, "hist_counts": [254104, 2247], "hist_labels": ["0", "1"]}, "불명확 불임 원인": {"type": "numeric", "total": 256351, "valid": 256351, "missing": 0, "min": 0.0, "max": 1.0, "mean": 0.251, "median": 0.0, "hist_counts": [192076, 64275], "hist_labels": ["0", "1"]}, "불임 원인 - 난관 질환": {"type": "numeric", "total": 256351, "valid": 256351, "missing": 0, "min": 0.0, "max": 1.0, "mean": 0.139, "median": 0.0, "hist_counts": [220794, 35557], "hist_labels": ["0", "1"]}, "불임 원인 - 남성 요인": {"type": "numeric", "total": 256351, "valid": 256351, "missing": 0, "min": 0.0, "max": 1.0, "mean": 0.372, "median": 0.0, "hist_counts": [160885, 95466], "hist_labels": ["0", "1"]}, "불임 원인 - 배란 장애": {"type": "numeric", "total": 256351, "valid": 256351, "missing": 0, "min": 0.0, "max": 1.0, "mean": 0.13, "median": 0.0, "hist_counts": [222925, 33426], "hist_labels": ["0", "1"]}, "불임 원인 - 여성 요인": {"type": "numeric", "total": 256351, "valid": 256351, "missing": 0, "min": 0.0, "max": 0.0, "mean": 0.0, "median": 0.0, "hist_counts": [256351], "hist_labels": ["0"], "zero_var": true}, "불임 원인 - 자궁내막증": {"type": "numeric", "total": 256351, "valid": 256351, "missing": 0, "min": 0.0, "max": 1.0, "mean": 0.071, "median": 0.0, "hist_counts": [238049, 18302], "hist_labels": ["0", "1"]}, "불임 원인 - 정자 농도": {"type": "numeric", "total": 256351, "valid": 256351, "missing": 0, "min": 0.0, "max": 1.0, "mean": 0.001, "median": 0.0, "hist_counts": [256075, 276], "hist_labels": ["0", "1"]}, "불임 원인 - 정자 면역학적 요인": {"type": "numeric", "total": 256351, "valid": 256351, "missing": 0, "min": 0.0, "max": 1.0, "mean": 0.0, "median": 0.0, "hist_counts": [256350, 1], "hist_labels": ["0", "1"], "zero_var": true}, "불임 원인 - 정자 운동성": {"type": "numeric", "total": 256351, "valid": 256351, "missing": 0, "min": 0.0, "max": 1.0, "mean": 0.0, "median": 0.0, "hist_counts": [256254, 97], "hist_labels": ["0", "1"], "zero_var": true}, "불임 원인 - 정자 형태": {"type": "numeric", "total": 256351, "valid": 256351, "missing": 0, "min": 0.0, "max": 1.0, "mean": 0.001, "median": 0.0, "hist_counts": [256208, 143], "hist_labels": ["0", "1"]}, "불임 원인 - 자궁경부 문제": {"type": "numeric", "total": 256351, "valid": 256351, "missing": 0, "min": 0.0, "max": 1.0, "mean": 0.0, "median": 0.0, "hist_counts": [256341, 10], "hist_labels": ["0", "1"], "zero_var": true}, "총 생성 배아 수": {"type": "numeric", "total": 256351, "valid": 250060, "missing": 6291, "min": 0.0, "max": 51.0, "mean": 5.061, "median": 4.0, "hist_counts": [87762, 62974, 34652, 33816, 12810, 10197, 3420, 2556, 815, 624, 240, 86, 60, 19, 17, 1, 6, 3, 0, 2], "hist_labels": ["0", "2.5", "5", "7.5", "10", "12.5", "15", "17.5", "20", "22.5", "25", "27.5", "30", "32.5", "35", "37.5", "40", "42.5", "45", "48"]}, "미세주입된 난자 수": {"type": "numeric", "total": 256351, "valid": 250060, "missing": 6291, "min": 0.0, "max": 51.0, "mean": 4.171, "median": 0.0, "hist_counts": [138500, 28153, 21486, 26053, 12150, 11684, 4523, 3815, 1452, 1133, 591, 205, 151, 66, 52, 15, 13, 5, 6, 7], "hist_labels": ["0", "2.5", "5", "7.5", "10", "12.5", "15", "17.5", "20", "22.5", "25", "27.5", "30", "32.5", "35", "37.5", "40", "42.5", "45", "48"]}, "미세주입에서 생성된 배아 수": {"type": "numeric", "total": 256351, "valid": 250060, "missing": 6291, "min": 0.0, "max": 43.0, "mean": 2.844, "median": 0.0, "hist_counts": [154320, 27689, 24510, 17305, 10992, 6720, 5048, 1579, 852, 471, 263, 146, 74, 57, 14, 12, 1, 2, 0, 5], "hist_labels": ["0", "2", "4", "6", "8", "10", "12", "14", "16", "18", "20", "22", "24", "26", "28", "30", "32", "34", "36", "40"]}, "이식된 배아 수": {"type": "numeric", "total": 256351, "valid": 250060, "missing": 6291, "min": 0.0, "max": 3.0, "mean": 1.368, "median": 1.0, "hist_counts": [36544, 93791, 110845, 8880], "hist_labels": ["0", "1", "2", "3"]}, "미세주입 배아 이식 수": {"type": "numeric", "total": 256351, "valid": 250060, "missing": 6291, "min": 0.0, "max": 3.0, "mean": 0.725, "median": 0.0, "hist_counts": [138774, 46475, 59685, 5126], "hist_labels": ["0", "1", "2", "3"]}, "저장된 배아 수": {"type": "numeric", "total": 256351, "valid": 250060, "missing": 6291, "min": 0.0, "max": 51.0, "mean": 1.186, "median": 0.0, "hist_counts": [207111, 28731, 6769, 4178, 1169, 995, 376, 379, 142, 137, 36, 16, 7, 3, 5, 0, 3, 1, 0, 2], "hist_labels": ["0", "2.5", "5", "7.5", "10", "12.5", "15", "17.5", "20", "22.5", "25", "27.5", "30", "32.5", "35", "37.5", "40", "42.5", "45", "48"]}, "미세주입 후 저장된 배아 수": {"type": "numeric", "total": 256351, "valid": 250060, "missing": 6291, "min": 0.0, "max": 51.0, "mean": 0.613, "median": 0.0, "hist_counts": [227986, 15324, 3217, 1958, 549, 503, 184, 177, 63, 68, 15, 8, 2, 1, 1, 0, 3, 0, 0, 1], "hist_labels": ["0", "2.5", "5", "7.5", "10", "12.5", "15", "17.5", "20", "22.5", "25", "27.5", "30", "32.5", "35", "37.5", "40", "42.5", "45", "48"]}, "해동된 배아 수": {"type": "numeric", "total": 256351, "valid": 250060, "missing": 6291, "min": 0.0, "max": 32.0, "mean": 0.455, "median": 0.0, "hist_counts": [222731, 17469, 3452, 3436, 1570, 412, 500, 144, 156, 89, 27, 40, 5, 13, 9, 0, 5, 0, 1, 1], "hist_labels": ["0", "1.6", "3.2", "4.8", "6.4", "8", "9.6", "11.2", "12.8", "14.4", "16", "17.6", "19.2", "20.8", "22.4", "24", "25.6", "27.2", "28.8", "30"]}, "해동 난자 수": {"type": "numeric", "total": 256351, "valid": 250060, "missing": 6291, "min": 0.0, "max": 36.0, "mean": 0.046, "median": 0.0, "hist_counts": [248641, 130, 237, 314, 324, 91, 137, 76, 57, 21, 12, 7, 3, 4, 3, 0, 0, 1, 1, 1], "hist_labels": ["0", "1.8", "3.6", "5.4", "7.2", "9", "10.8", "12.6", "14.4", "16.2", "18", "19.8", "21.6", "23.4", "25.2", "27", "28.8", "30.6", "32.4", "34"]}, "수집된 신선 난자 수": {"type": "numeric", "total": 256351, "valid": 250060, "missing": 6291, "min": 0.0, "max": 51.0, "mean": 8.564, "median": 8.0, "hist_counts": [65140, 29665, 25710, 39023, 22922, 26701, 12537, 12482, 5082, 4896, 2615, 1054, 986, 406, 393, 140, 125, 47, 47, 89], "hist_labels": ["0", "2.5", "5", "7.5", "10", "12.5", "15", "17.5", "20", "22.5", "25", "27.5", "30", "32.5", "35", "37.5", "40", "42.5", "45", "48"]}, "저장된 신선 난자 수": {"type": "numeric", "total": 256351, "valid": 250060, "missing": 6291, "min": 0.0, "max": 51.0, "mean": 0.093, "median": 0.0, "hist_counts": [247728, 622, 394, 477, 237, 253, 107, 102, 38, 47, 28, 8, 8, 6, 2, 1, 0, 0, 1, 1], "hist_labels": ["0", "2.5", "5", "7.5", "10", "12.5", "15", "17.5", "20", "22.5", "25", "27.5", "30", "32.5", "35", "37.5", "40", "42.5", "45", "48"]}, "혼합된 난자 수": {"type": "numeric", "total": 256351, "valid": 250060, "missing": 6291, "min": 0.0, "max": 51.0, "mean": 7.699, "median": 7.0, "hist_counts": [62033, 40180, 32322, 42361, 21776, 22784, 9669, 8811, 3519, 3175, 1638, 603, 539, 232, 215, 69, 56, 16, 23, 39], "hist_labels": ["0", "2.5", "5", "7.5", "10", "12.5", "15", "17.5", "20", "22.5", "25", "27.5", "30", "32.5", "35", "37.5", "40", "42.5", "45", "48"]}, "파트너 정자와 혼합된 난자 수": {"type": "numeric", "total": 256351, "valid": 250060, "missing": 6291, "min": 0.0, "max": 51.0, "mean": 7.107, "median": 6.0, "hist_counts": [76720, 36748, 29718, 39142, 20176, 21101, 8919, 8195, 3269, 2937, 1510, 555, 485, 213, 183, 65, 54, 12, 22, 36], "hist_labels": ["0", "2.5", "5", "7.5", "10", "12.5", "15", "17.5", "20", "22.5", "25", "27.5", "30", "32.5", "35", "37.5", "40", "42.5", "45", "48"]}, "기증자 정자와 혼합된 난자 수": {"type": "numeric", "total": 256351, "valid": 250060, "missing": 6291, "min": 0.0, "max": 50.0, "mean": 0.535, "median": 0.0, "hist_counts": [236155, 3493, 2622, 3109, 1482, 1486, 630, 498, 202, 178, 62, 59, 28, 26, 14, 10, 2, 1, 1, 2], "hist_labels": ["0", "2.5", "5", "7.5", "10", "12.5", "15", "17.5", "20", "22.5", "25", "27.5", "30", "32.5", "35", "37.5", "40", "42.5", "45", "48"]}, "동결 배아 사용 여부": {"type": "numeric", "total": 256351, "valid": 250060, "missing": 6291, "min": 0.0, "max": 1.0, "mean": 0.16, "median": 0.0, "hist_counts": [209934, 40126], "hist_labels": ["0", "1"]}, "신선 배아 사용 여부": {"type": "numeric", "total": 256351, "valid": 250060, "missing": 6291, "min": 0.0, "max": 1.0, "mean": 0.84, "median": 1.0, "hist_counts": [39924, 210136], "hist_labels": ["0", "1"]}, "기증 배아 사용 여부": {"type": "numeric", "total": 256351, "valid": 250060, "missing": 6291, "min": 0.0, "max": 1.0, "mean": 0.01, "median": 0.0, "hist_counts": [247602, 2458], "hist_labels": ["0", "1"]}, "대리모 여부": {"type": "numeric", "total": 256351, "valid": 250060, "missing": 6291, "min": 0.0, "max": 1.0, "mean": 0.004, "median": 0.0, "hist_counts": [249011, 1049], "hist_labels": ["0", "1"]}, "PGD 시술 여부": {"type": "numeric", "total": 256351, "valid": 2179, "missing": 254172, "min": 1.0, "max": 1.0, "mean": 1.0, "median": 1.0, "hist_counts": [2179], "hist_labels": ["1"], "drop": true}, "PGS 시술 여부": {"type": "numeric", "total": 256351, "valid": 1929, "missing": 254422, "min": 1.0, "max": 1.0, "mean": 1.0, "median": 1.0, "hist_counts": [1929], "hist_labels": ["1"], "drop": true}, "난자 채취 경과일": {"type": "numeric", "total": 256351, "valid": 198863, "missing": 57488, "min": 0.0, "max": 0.0, "mean": 0.0, "median": 0.0, "hist_counts": [198863], "hist_labels": ["0"], "drop": true, "zero_var": true}, "난자 해동 경과일": {"type": "numeric", "total": 256351, "valid": 1436, "missing": 254915, "min": 0.0, "max": 1.0, "mean": 0.001, "median": 0.0, "hist_counts": [1434, 2], "hist_labels": ["0", "1"], "drop": true}, "난자 혼합 경과일": {"type": "numeric", "total": 256351, "valid": 202616, "missing": 53735, "min": 0.0, "max": 7.0, "mean": 0.005, "median": 0.0, "hist_counts": [201920, 488, 102, 68, 5, 24, 8, 1], "hist_labels": ["0", "0.9", "1.8", "2.6", "3.5", "4.4", "5.2", "6.1"]}, "배아 이식 경과일": {"type": "numeric", "total": 256351, "valid": 212785, "missing": 43566, "min": 0.0, "max": 7.0, "mean": 3.255, "median": 3.0, "hist_counts": [24904, 6053, 35078, 57924, 4504, 81459, 2773, 90], "hist_labels": ["0", "0.9", "1.8", "2.6", "3.5", "4.4", "5.2", "6.1"]}, "배아 해동 경과일": {"type": "numeric", "total": 256351, "valid": 40369, "missing": 215982, "min": 0.0, "max": 7.0, "mean": 0.046, "median": 0.0, "hist_counts": [39801, 37, 182, 164, 12, 140, 30, 3], "hist_labels": ["0", "0.9", "1.8", "2.6", "3.5", "4.4", "5.2", "6.1"], "drop": true}, "임신 성공 여부": {"type": "numeric", "total": 256351, "valid": 256351, "missing": 0, "min": 0.0, "max": 1.0, "mean": 0.258, "median": 0.0, "hist_counts": [190123, 66228], "hist_labels": ["실패(0)", "성공(1)"]}};
+
+// drop 태그 자동 추가
+const DROP_COLS = ['PGD 시술 여부','PGS 시술 여부','난자 채취 경과일','난자 해동 경과일','배아 해동 경과일',
+  '임신 시도 또는 마지막 임신 경과 연수','착상 전 유전 검사 사용 여부'];
+DROP_COLS.forEach(c => { if(DATA[c]) DATA[c].drop = true; });
+
+function fmt(n){ return n >= 1000 ? (n/1000).toFixed(1)+'k' : String(n); }
+function fmtFull(n){ return n.toLocaleString(); }
+
+function missingColor(pct){
+  if(pct >= 80) return '#ef4444';
+  if(pct >= 20) return '#f59e0b';
+  if(pct >= 2)  return '#3b82f6';
+  return '#22c55e';
+}
+
+function buildCard(name, d){
+  const missingPct = (d.missing / d.total * 100);
+  const isDrop = !!d.drop;
+  const isZero = !!d.zero_var;
+
+  let badges = '';
+  if(isDrop) badges += `<span class="badge badge-drop">DROP</span>`;
+  if(isZero) badges += `<span class="badge badge-zero">분산≈0</span>`;
+  badges += `<span class="badge ${d.type==='categorical'?'badge-cat':'badge-num'}">${d.type==='categorical'?'범주형':'수치형'}</span>`;
+
+  // 통계 행
+  let statsHtml = '';
+  if(d.type === 'numeric'){
+    statsHtml = `<div class="stats">
+      <div class="stat"><div class="stat-label">유효</div><div class="stat-value green">${fmt(d.valid)}</div></div>
+      <div class="stat"><div class="stat-label">결측</div><div class="stat-value ${missingPct>50?'red':missingPct>5?'blue':'gray'}">${fmt(d.missing)}</div></div>
+      <div class="stat"><div class="stat-label">min</div><div class="stat-value blue">${d.min}</div></div>
+      <div class="stat"><div class="stat-label">max</div><div class="stat-value blue">${d.max}</div></div>
+      <div class="stat"><div class="stat-label">중앙값</div><div class="stat-value gray">${d.median}</div></div>
+    </div>`;
+  } else {
+    const total_valid = d.valid;
+    statsHtml = `<div class="stats">
+      <div class="stat"><div class="stat-label">유효</div><div class="stat-value green">${fmt(d.valid)}</div></div>
+      <div class="stat"><div class="stat-label">결측</div><div class="stat-value ${missingPct>5?'red':'gray'}">${fmt(d.missing)}</div></div>
+      <div class="stat"><div class="stat-label">카테고리</div><div class="stat-value blue">${Object.keys(d.values).length}개</div></div>
+    </div>`;
+  }
+
+  // 결측치 바
+  const mColor = missingColor(missingPct);
+  const missingHtml = `<div class="missing-row">
+    <span class="missing-label">결측</span>
+    <div class="missing-track"><div class="missing-fill" style="width:${missingPct}%;background:${mColor}"></div></div>
+    <span class="missing-pct" style="color:${mColor}">${missingPct.toFixed(1)}%</span>
+  </div>`;
+
+  // 차트
+  let chartHtml = '';
+  if(d.type === 'categorical'){
+    const entries = Object.entries(d.values).filter(([k])=>k!=='nan').slice(0,8);
+    const maxV = Math.max(...entries.map(([,v])=>v));
+    const bars = entries.map(([k,v])=>{
+      const w = maxV > 0 ? (v/maxV*100).toFixed(1) : 0;
+      return `<div class="bar-row">
+        <span class="bar-key" title="${k}">${k}</span>
+        <div class="bar-track"><div class="bar-fill-cat" style="width:${w}%"></div></div>
+        <span class="bar-val">${fmtFull(v)}</span>
+      </div>`;
+    }).join('');
+    chartHtml = `<div class="chart-area"><div class="chart-title">값 분포</div><div class="bar-chart">${bars}</div></div>`;
+  } else if(d.hist_counts && d.hist_counts.length > 1){
+    const maxC = Math.max(...d.hist_counts);
+    const bars = d.hist_counts.map((c,i)=>{
+      const h = maxC > 0 ? Math.max(2, (c/maxC*100)) : 2;
+      return `<div class="hist-bar" style="height:${h}%" title="${d.hist_labels[i]||i}: ${fmtFull(c)}"></div>`;
+    }).join('');
+    const first = d.hist_labels[0]||'';
+    const last = d.hist_labels[d.hist_labels.length-1]||'';
+    chartHtml = `<div class="chart-area">
+      <div class="chart-title">히스토그램 (평균: ${d.mean})</div>
+      <div class="hist-wrap">${bars}</div>
+      <div class="hist-axis"><span>${first}</span><span>${last}</span></div>
+    </div>`;
+  }
+
+  return `<div class="card" data-type="${d.type}" data-drop="${isDrop}" data-zero="${isZero}" data-name="${name}">
+    <div class="card-header">
+      <div class="col-name">${name}</div>
+      <div class="badges">${badges}</div>
+    </div>
+    ${statsHtml}
+    ${missingHtml}
+    ${chartHtml}
+  </div>`;
+}
+
+// 렌더링
+const grid = document.getElementById('grid');
+const countBadge = document.getElementById('countBadge');
+let currentFilter = 'all';
+let currentSearch = '';
+
+function render(){
+  const cards = Object.entries(DATA).filter(([name, d])=>{
+    const matchFilter =
+      currentFilter === 'all' ? true :
+      currentFilter === 'categorical' ? d.type === 'categorical' :
+      currentFilter === 'numeric' ? d.type === 'numeric' :
+      currentFilter === 'drop' ? !!d.drop :
+      currentFilter === 'zero' ? !!d.zero_var : true;
+    const matchSearch = name.toLowerCase().includes(currentSearch.toLowerCase());
+    return matchFilter && matchSearch;
+  });
+  grid.innerHTML = cards.map(([n,d])=>buildCard(n,d)).join('');
+  countBadge.textContent = `${cards.length}개 피처`;
+}
+
+document.querySelectorAll('.filter-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    currentFilter = btn.dataset.filter;
+    render();
+  });
+});
+
+document.getElementById('searchInput').addEventListener('input', e=>{
+  currentSearch = e.target.value;
+  render();
+});
+
+render();
+</script>
+</body>
+</html>

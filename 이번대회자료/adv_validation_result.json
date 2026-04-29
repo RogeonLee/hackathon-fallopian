@@ -1,0 +1,140 @@
+{
+  "adv_auc_mean": 0.5011297353310192,
+  "adv_auc_per_fold": [
+    0.49889864919917887,
+    0.5002746189931073,
+    0.5004314709693427,
+    0.5036131799833229,
+    0.5024307575101444
+  ],
+  "shift_exists": false,
+  "top_shift_features": [
+    {
+      "feature": "총 생성 배아 수",
+      "importance": 24.8
+    },
+    {
+      "feature": "수집된 신선 난자 수",
+      "importance": 20.8
+    },
+    {
+      "feature": "저장된 배아 수",
+      "importance": 19.2
+    },
+    {
+      "feature": "미세주입에서 생성된 배아 수",
+      "importance": 17.2
+    },
+    {
+      "feature": "파트너 정자와 혼합된 난자 수",
+      "importance": 17.2
+    },
+    {
+      "feature": "혼합된 난자 수",
+      "importance": 17.2
+    },
+    {
+      "feature": "배아 이식 경과일",
+      "importance": 16.4
+    },
+    {
+      "feature": "클리닉 내 총 시술 횟수",
+      "importance": 15.8
+    },
+    {
+      "feature": "임신 시도 또는 마지막 임신 경과 연수",
+      "importance": 14.4
+    },
+    {
+      "feature": "미세주입 후 저장된 배아 수",
+      "importance": 13.6
+    },
+    {
+      "feature": "미세주입된 난자 수",
+      "importance": 13.2
+    },
+    {
+      "feature": "시술 당시 나이",
+      "importance": 12.6
+    },
+    {
+      "feature": "시술 시기 코드",
+      "importance": 10.8
+    },
+    {
+      "feature": "총 시술 횟수",
+      "importance": 9.0
+    },
+    {
+      "feature": "정자 기증자 나이",
+      "importance": 8.6
+    },
+    {
+      "feature": "IVF 시술 횟수",
+      "importance": 8.6
+    },
+    {
+      "feature": "이식된 배아 수",
+      "importance": 7.8
+    },
+    {
+      "feature": "해동된 배아 수",
+      "importance": 6.4
+    },
+    {
+      "feature": "불임 원인 - 남성 요인",
+      "importance": 6.4
+    },
+    {
+      "feature": "기증자 정자와 혼합된 난자 수",
+      "importance": 6.2
+    },
+    {
+      "feature": "특정 시술 유형",
+      "importance": 5.6
+    },
+    {
+      "feature": "불임 원인 - 배란 장애",
+      "importance": 5.4
+    },
+    {
+      "feature": "미세주입 배아 이식 수",
+      "importance": 4.2
+    },
+    {
+      "feature": "단일 배아 이식 여부",
+      "importance": 4.0
+    },
+    {
+      "feature": "난자 기증자 나이",
+      "importance": 3.6
+    },
+    {
+      "feature": "불임 원인 - 난관 질환",
+      "importance": 3.4
+    },
+    {
+      "feature": "총 임신 횟수",
+      "importance": 3.4
+    },
+    {
+      "feature": "불명확 불임 원인",
+      "importance": 3.0
+    },
+    {
+      "feature": "배란 자극 여부",
+      "importance": 2.8
+    },
+    {
+      "feature": "IVF 임신 횟수",
+      "importance": 2.6
+    }
+  ],
+  "weight_stats": {
+    "mean": 1.000000038485587,
+    "median": 1.0155010160325548,
+    "std": 0.13556040332325203,
+    "min": 0.1,
+    "max": 4.283174490181881
+  }
+}

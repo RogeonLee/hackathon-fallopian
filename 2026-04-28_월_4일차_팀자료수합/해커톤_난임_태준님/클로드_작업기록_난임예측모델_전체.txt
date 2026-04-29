@@ -1,0 +1,285 @@
+================================================================
+난임 환자 임신 성공 예측 모델 — 전체 작업 기록
+================================================================
+작성일: 2025년 4월 27~28일
+참여: 산부인과 전문의 + Claude
+목표: OOF AUC 0.7424 이상 달성
+
+================================================================
+■ 프로젝트 구조
+================================================================
+
+project/
+├── data/
+│   ├── train.csv          (256,351행 × 69컬럼, 임신 성공률 25.8%)
+│   ├── test.csv
+│   └── sample_submission.csv
+├── pipeline/
+│   ├── schema.py          ← 컬럼 카테고리 정의
+│   ├── preprocess.py      ← 전처리 로직
+│   └── feature_engineering.py  ← 피처 엔지니어링
+└── main.py                ← 메인 실행 파일 (6모델 앙상블)
+
+================================================================
+■ 성능 이력
+================================================================
+
+| 버전                  | OOF AUC | 주요 변경 내용                          |
+|-----------------------|---------|----------------------------------------|
+| 초기 LGB 단순 검증     | 0.73896 | 3-fold, 기본 파라미터                   |
+| 6모델 앙상블 v1        | 0.74093 | early stopping, multi-seed             |
+| 피처 추가 후 (하락)    | 0.74081 | proc 토큰은 추가했으나 v3 빈약 문제     |
+| 현재 (미실행)          | ?       | v10 기본 비율 7개 + is_elective_SET 이동|
+
+================================================================
+■ 1일차 (4월 26일) — 노트북 실험
+================================================================
+
+다양한 접근을 시도했으나 LGB OOF 0.738 수준에서 정체.
+Claude 자체 실행 환경 시간 제한으로 완전한 앙상블 미완.
+v10 노트북 코드 검토 후 개선점 분석.
+
+v10 노트북 분석 결과 (산부인과 전문의 관점):
+  - gap_transfer_minus_pickup: 난자 채취 경과일 전부 0 → 중복 피처
+  - age_normalized_efficiency 방향 오류: ×(나이/35) → ×(35/나이) 필요
+  - embryo_utilization_rate = 이식가능률 (상관 1.000, 완전 중복)
+  - CatBoost max_ctr_complexity=0 → 범주형 강점 포기
+  - split_model에 v3 피처만 사용 (v10 피처 적용 안 됨)
+
+================================================================
+■ 2일차 (4월 27~28일) — pipeline 기반 재구축
+================================================================
+
+────────────────────────────────────────────────────────────────
+[Step 1] pipeline/schema.py 수정
+────────────────────────────────────────────────────────────────
+
+변경 내용:
+  1. CENSORED_COLUMNS에 '클리닉 내 총 시술 횟수' 추가
+     (v10 count_cols에는 있었지만 우리 schema에 누락)
+  2. 존재하지 않는 '기타 임신 출산 횟수' 제거
+  3. FLAG_COLUMNS '불명확 원인' → '불명확 불임 원인' 오타 수정
+
+최종 CENSORED_COLUMNS:
+  '총 시술 횟수', '클리닉 내 총 시술 횟수',
+  'IVF 시술 횟수', 'DI 시술 횟수',
+  '총 임신 횟수', 'IVF 임신 횟수', 'DI 임신 횟수',
+  '총 출산 횟수', 'IVF 출산 횟수', 'DI 출산 횟수'
+
+────────────────────────────────────────────────────────────────
+[Step 2] pipeline/preprocess.py 수정
+────────────────────────────────────────────────────────────────
+
+변경 내용:
+  1. is_censored_ 플래그 생성 코드 제거 (v10에 없는 노이즈)
+     - '6회 이상'은 이미 숫자 6으로 표현되므로 별도 플래그 불필요
+     - 9개 컬럼 × 불필요 이진 피처 제거
+     ※ pd.to_numeric 변환 코드는 유지 (숫자 변환은 필수)
+
+  2. pandas 2.0+ StringDtype 방어 추가
+     - _clean_string_to_int 후 pd.to_numeric(..., errors='coerce') 적용
+     - 해결 에러: TypeError: '>' not supported between 'str' and 'int'
+
+  3. age_ord_map '알 수 없음': -1 → np.nan 수정
+     - -1은 트리가 "만18-34세(0)보다 더 젊다"로 오해
+     - 329건 모두 임신 성공률 0% → NaN 처리가 더 안전
+
+────────────────────────────────────────────────────────────────
+[Step 3] pipeline/feature_engineering.py — 최종본
+────────────────────────────────────────────────────────────────
+
+[핵심 구조 변경]
+  transform(self, df) → transform(self, df, level='full')
+  - level='v3' : _v3_domain() 만 실행
+  - level='full': _v3_domain() + Groups A~D 전체 (기본값)
+
+  ※ 기존 engineer.transform(df) 호출 방식은 그대로 동작
+
+──────────────────────────────────────
+_v3_domain() — v3/full 모두 포함 (모든 모델 공통 기반)
+──────────────────────────────────────
+
+[v10 원본 5개]
+  - days_mix_to_transfer : 배아 이식 경과일 - 난자 혼합 경과일
+  - real_age_num         : 기증 난자 사용 시 기증자 나이로 교체
+  - log_n_embryo         : log1p(총 생성 배아 수)
+  - miss_gene_test       : PGS/PGD/착상전유전검사 누락 플래그
+  - age_x_embryo_ratio   : 나이 × 이식 배아 비율
+
+[v10 proc 토큰 6개] ← 핵심 누락 피처 (가장 큰 v10 vs 우리 갭)
+  - has_ICSI             : 성공률 26.8%
+  - has_IVF              : 성공률 25.9%
+  - has_BLASTOCYST       : 성공률 36.1% ← 핵심! 배아 생존력 증거
+  - has_AH               : 성공률 20.8%
+  - has_Unknown          : 성공률 23.6%
+  - has_FER              : 성공률 33.3%
+
+[v10 기본 비율 7개] ← v3 모델들 빈약함을 채운 핵심 수정
+  이유: v10 process_chunk()는 모든 모델에 공통 적용했는데
+        우리 pipeline은 Groups B/C (full only)에만 있었음
+        → v3 모델 가중치가 0이 되는 근본 원인
+  - past_preg_rate        : 총 임신 횟수 / 총 시술 횟수
+  - past_birth_rate       : 총 출산 횟수 / 총 임신 횟수
+  - ivf_preg_rate         : IVF 임신 횟수 / IVF 시술 횟수
+  - embryo_transfer_ratio : 이식된 배아 수 / 총 생성 배아 수
+  - embryo_stored_ratio   : 저장된 배아 수 / 총 생성 배아 수
+  - icsi_ratio            : 미세주입된 난자 수 / 혼합된 난자 수
+  - age_x_transferred     : 나이 × 이식된 배아 수
+
+[신규 2개 — Gemini + 산부인과 전문의 의견 종합]
+  - age_normalized_efficiency : 배아생성효율 × (35/나이)
+    ※ 수식 방향 수정: ×(나이/35) → ×(35/나이)
+    ※ 고령인데 효율 높음 = 강한 긍정 신호 (상관 0.063→0.087)
+
+  - is_elective_SET : (이식된 배아 수 == 1) & (총 생성 배아 수 > 1)
+    ※ 선택적 단일 배아 이식 성공률: 38.0%
+    ※ 어쩔 수 없는 단일 이식 성공률: 11.1%
+    ※ 27%p 차이 — 배아 품질 선별 신호의 핵심
+
+──────────────────────────────────────
+Groups A~D — full 전용 (level='full')
+──────────────────────────────────────
+
+[Group A: 문헌 검증 킬러 피처]
+  - ever_delivered       : 과거 출산 경험 (최강 긍정 신호, Templeton 1996)
+  - repeated_3plus       : 3회 이상 시술 (성공률 급락)
+  - is_first_attempt     : 첫 번째 시도 여부
+  - is_FET               : 동결 주기 여부 (TOP 5 예측 변수)
+  - eset_blast           : 단일 배아 이식 + 배반포 시너지 (OR 2.32)
+  - elderly_donor_egg    : 고령(40+) + 기증 난자 사용
+
+[Group B: 배아 파이프라인 전환율]
+  - ratio_maturity       : 채취 난자 대비 ICSI 주입 비중
+  - is_ICSI              : ICSI 시술 여부
+  - ratio_icsi_success   : ICSI 수정률 (ICSI=0이면 NaN — "실패"와 혼동 방지)
+  - ratio_embryo_yield   : 채취 난자 대비 배아 형성률
+  - ratio_transfer_density : 생성 배아 중 이식 비율
+
+[Group C: 도메인 상호작용]
+  - eggs_optimal         : 난자 수 최적 구간 (10~20개)
+  - low_ovarian_response : 저반응군 (신선 난자 ≤3개)
+  - proper_icsi_match    : 남성요인 × ICSI 적합 매칭 (+5.6%p)
+  - age_x_procedure      : 나이 × 시술 횟수
+
+[Group D: 구간/복합 피처]
+  - 배아수_그룹    : Poor(0-6) / Normal(7-14) / High(15-20) / Hyper(21+)
+  - ICSI_난자_구간 : VeryLow / Low / Optimal(10-19) / VeryHigh
+  - 시술적합성     : 적합ICSI / 과사용 / 부적합 / 해당없음
+  - 이식_취소      : 이식된 배아 수 == 0
+
+[버그 수정 이력]
+  - flag_logic_error : FET 케이스(37,231건) 제외 후 판단
+  - ratio_icsi_success : ICSI 안 한 케이스 → NaN (0은 실패로 오해)
+  - DI 케이스 fillna(0) 적용
+
+────────────────────────────────────────────────────────────────
+[Step 4] main.py — 6모델 앙상블 구조
+────────────────────────────────────────────────────────────────
+
+[모델 구성]
+  M1. LightGBM v3   (SEEDS_5=[42,2024,777,31415,99999], 5-Fold)
+  M2. LightGBM v3+TE (SEEDS_5, 시술 시기 코드 Target Encoding)
+  M3. XGBoost v3    (SEEDS_3=[42,2024,777], 5-Fold)
+  M4. XGBoost full  (SEEDS_3, enable_categorical=True, X_fc 피처셋)
+  M5. LGB split     (SEEDS_5, 이식/비이식 분리 학습)
+  M6. CatBoost full (SEEDS_3, max_ctr_complexity=2)
+
+[파라미터]
+  LGB: learning_rate=0.025, num_leaves=95, min_data_in_leaf=150
+       num_boost_round=5000, early_stopping=120
+  XGB: learning_rate=0.03, max_depth=7, min_child_weight=10
+       num_boost_round=3000, early_stopping=100
+  CAT: iterations=600, learning_rate=0.05, depth=6
+       max_ctr_complexity=2, early_stopping=100
+
+[데이터 누수 방지 설계]
+  - fit은 반드시 train only
+  - Target Encoding: 5-Fold OOF 방식 (val 통계 절대 미사용)
+  - 앙상블 가중치: OOF 예측에서만 scipy.optimize Nelder-Mead 탐색
+  - test 예측 = fold 평균 (OOF 통계 사용 안 함)
+
+[출력]
+  - submission_Ensemble_AUC{score}_{timestamp}.csv (최종 1개만)
+  - oof_m1~m6.npy, pred_m1~m6.npy (재현성용)
+
+================================================================
+■ 에러 해결 이력
+================================================================
+
+[에러 1] TypeError: '>' not supported between 'str' and 'int'
+  원인: pandas 2.0+ StringDtype 유지 문제
+  해결: safe_num() 헬퍼 + pd.to_numeric() 추가
+
+[에러 2] ValueError: pandas dtypes must be int, float or bool
+  원인: string 컬럼이 LGB에 들어감
+  해결: finalize_features()에서 횟수형/범주형 자동 분류 처리
+
+[에러 3] CatBoostError: Cannot convert 'ICSI' to float
+  원인: cat_idx_full이 KEEP_CAT_FULL 목록만 포함 (나머지 string 누락)
+  해결: finalize 후 실제 string 컬럼 전체 자동 탐색으로 변경
+
+[에러 4] XGBoost KeyError: 'str'
+  원인: _to_cat()에서 pandas 2.0 str dtype 미탐지
+  해결: pd.api.types.is_numeric_dtype()으로 비수치형 전체 탐지
+
+================================================================
+■ 핵심 임상 인사이트 (산부인과 전문의 관점)
+================================================================
+
+1. 배반포 이식 (has_BLASTOCYST, 성공률 36.1%)
+   → 5일 배양 생존 = 배아 생존력의 직접 증거
+   → 단순 이식 방법 차이가 아닌 배아 품질 선별 과정
+
+2. 선택적 단일 배아 이식 (is_elective_SET, 38.0% vs 11.1%)
+   → 배아 여럿 중 1개 선택 = 냉동 보관 가능한 잉여 배아 존재
+   → 어쩔 수 없는 단일 이식과 근본적으로 다른 상황
+
+3. age_normalized_efficiency (35/나이 방향)
+   → 고령에서 높은 효율 = 훨씬 강한 긍정 신호
+   → 36세 수정률 70% ≠ 44세 수정률 70%
+
+4. real_age_num (기증 난자 시 기증자 나이 사용)
+   → 기증 난자 케이스에서 환자 나이는 무의미
+   → 배아 품질은 기증자 나이가 결정
+
+5. is_FET (동결 주기 여부)
+   → 신선/동결 주기 패턴 자체가 다름
+   → FET 마스킹: NaN이 -1보다 LGB에서 더 명확한 신호
+
+6. 이식된 배아 수 최적화
+   → 1~2개: 31% (최고), 3개: 17% (과다이식 역설)
+
+================================================================
+■ Gemini vs Claude 분석 비교
+================================================================
+
+[Gemini가 맞게 제안한 것]
+  ✅ is_elective_SET (성공률 38.0% vs 11.1%, 27%p 차이)
+  ✅ age_normalized_efficiency 수식 방향 수정
+
+[이미 구현되어 있어 불필요한 제안]
+  - ever_delivered, is_FET, Target Encoding, proper_icsi_match
+
+[Gemini가 놓친 것 (Claude가 추가 발견)]
+  ★ proc 토큰 6개 누락 (has_ICSI, has_BLASTOCYST 등)
+    → BLASTOCYST 성공률 36.1%, 가장 큰 v10 갭
+  ★ v3 피처셋 빈약 문제
+    → v10 기본 비율 7개가 v3에 없어 LGB_v3TE, XGB_full 가중치 0
+  ★ is_censored_ 9개 노이즈 (불필요한 플래그)
+
+================================================================
+■ 다음 단계 계획
+================================================================
+
+1. 현재 코드 실행 후 결과 확인 (목표: 0.7424 이상)
+
+2. 결과에 따라 AutoGluon 추가 고려
+   - raw 데이터 아닌 pipeline processed data에 적용 (누수 방지)
+   - best_quality 프리셋, time_limit=3600
+   - 6모델 OOF + AutoGluon OOF 최종 앙상블
+   - 예상 추가 효과: +0.001~0.002
+
+3. 잔차학습은 결과 보고 판단
+   (데이터 누수 위험 및 구조상 실익 불확실 — 현재는 보류)
+
+================================================================

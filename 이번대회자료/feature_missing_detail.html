@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=JetBrains+Mono:wght@500&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Noto Sans KR', sans-serif; background: #0f1117; color: #e2e8f0; padding: 28px 20px; }
+  h1 { font-size: 13px; font-weight: 700; color: #94a3b8; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 6px; }
+  .subtitle { font-size: 11px; color: #475569; margin-bottom: 20px; }
+  .total-badge { display: inline-block; background: #1e2433; border: 1px solid #2d3748; border-radius: 6px; padding: 4px 12px; font-size: 11px; color: #94a3b8; margin-bottom: 20px; }
+  .total-badge b { color: #e2e8f0; font-family: 'JetBrains Mono', monospace; }
+
+  .legend { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }
+  .legend-item { display: flex; align-items: center; gap: 5px; font-size: 10px; color: #94a3b8; }
+  .ldot { width: 8px; height: 8px; border-radius: 2px; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 11.5px; }
+  thead th { background: #1a1f2e; color: #64748b; font-size: 10px; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; padding: 8px 12px; text-align: left; border-bottom: 1px solid #2d3748; position: sticky; top: 0; }
+  td { padding: 7px 12px; border-bottom: 1px solid #141820; vertical-align: middle; }
+  tr:hover td { background: #13171f; }
+
+  .col-name { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #c8d6e5; }
+  .num { font-family: 'JetBrains Mono', monospace; font-size: 11px; text-align: right; }
+  .num-valid { color: #34d399; }
+  .num-missing { color: #f87171; }
+  .num-pct-high { color: #f87171; font-weight: 700; }
+  .num-pct-mid  { color: #fbbf24; }
+  .num-pct-low  { color: #60a5fa; }
+  .num-pct-zero { color: #475569; }
+
+  .bar-cell { width: 110px; }
+  .bar-bg { background: #1e2433; border-radius: 3px; height: 6px; width: 90px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 3px; }
+
+  .tag { display: inline-block; padding: 1px 6px; border-radius: 3px; font-size: 9px; font-weight: 700; letter-spacing: 0.04em; white-space: nowrap; }
+  .tag-drop   { background: #3f1f1f; color: #f87171; }
+  .tag-impute { background: #1f3f2f; color: #34d399; }
+  .tag-keep   { background: #1a1f2e; color: #64748b; }
+  .tag-impute-flag { background: #2f1f3f; color: #a78bfa; }
+
+  .section-row td { background: #0c0e14; color: #475569; font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; padding: 6px 12px; border-top: 2px solid #2d3748; }
+</style>
+</head>
+<body>
+
+<h1>컬럼별 결측치 상세</h1>
+<p class="subtitle">전체 256,351행 기준 · 결측치 비율 내림차순 정렬</p>
+<div class="total-badge">전체 행 수 <b>256,351</b> &nbsp;|&nbsp; 컬럼 수 <b>69</b></div>
+
+<div class="legend">
+  <div class="legend-item"><div class="ldot" style="background:#f87171"></div> 제거 (DROP)</div>
+  <div class="legend-item"><div class="ldot" style="background:#a78bfa"></div> 중앙값 대체 + 결측여부 피처 생성</div>
+  <div class="legend-item"><div class="ldot" style="background:#34d399"></div> 중앙값 대체</div>
+  <div class="legend-item"><div class="ldot" style="background:#475569"></div> 유지 (결측 없음)</div>
+</div>
+
+<table>
+  <thead>
+    <tr>
+      <th style="width:36%">피처명</th>
+      <th style="text-align:right">유효 수</th>
+      <th style="text-align:right">결측 수</th>
+      <th style="text-align:right">결측 %</th>
+      <th class="bar-cell">비율 시각화</th>
+      <th>처리</th>
+    </tr>
+  </thead>
+  <tbody>
+
+    <tr class="section-row"><td colspan="6">── 결측치 높음 (제거 대상)</td></tr>
+
+    <tr>
+      <td class="col-name">난자 해동 경과일</td>
+      <td class="num num-valid">1,436</td>
+      <td class="num num-missing">254,915</td>
+      <td class="num num-pct-high">99.44%</td>
+      <td><div class="bar-bg"><div class="bar-fill" style="width:99.44%;background:#ef4444"></div></div></td>
+      <td><span class="tag tag-drop">DROP</span></td>
+    </tr>
+    <tr>
+      <td class="col-name">PGS 시술 여부</td>
+      <td class="num num-valid">1,929</td>
+      <td class="num num-missing">254,422</td>
+      <td class="num num-pct-high">99.25%</td>
+      <td><div class="bar-bg"><div class="bar-fill" style="width:99.25%;background:#ef4444"></div></div></td>
+      <td><span class="tag tag-drop">DROP</span></td>
+    </tr>
+    <tr>
+      <td class="col-name">PGD 시술 여부</td>
+      <td class="num num-valid">2,179</td>
+      <td class="num num-missing">254,172</td>
+      <td class="num num-pct-high">99.15%</td>
+      <td><div class="bar-bg"><div class="bar-fill" style="width:99.15%;background:#ef4444"></div></div></td>
+      <td><span class="tag tag-drop">DROP</span></td>
+    </tr>
+    <tr>
+      <td class="col-name">착상 전 유전 검사 사용 여부</td>
+      <td class="num num-valid">2,718</td>
+      <td class="num num-missing">253,633</td>
+      <td class="num num-pct-high">98.94%</td>
+      <td><div class="bar-bg"><div class="bar-fill" style="width:98.94%;background:#ef4444"></div></div></td>
+      <td><span class="tag tag-drop">DROP</span></td>
+    </tr>
+    <tr>
+      <td class="col-name">임신 시도/마지막 임신 경과 연수</td>
+      <td class="num num-valid">9,370</td>
+      <td class="num num-missing">246,981</td>
+      <td class="num num-pct-high">96.34%</td>
+      <td><div class="bar-bg"><div class="bar-fill" style="width:96.34%;background:#ef4444"></div></div></td>
+      <td><span class="tag tag-drop">DROP</span></td>
+    </tr>
+    <tr>
+      <td class="col-name">배아 해동 경과일</td>
+      <td class="num num-valid">40,369</td>
+      <td class="num num-missing">215,982</td>
+      <td class="num num-pct-high">84.25%</td>
+      <td><div class="bar-bg"><div class="bar-fill" style="width:84.25%;background:#ef4444"></div></div></td>
+      <td><span class="tag tag-drop">DROP</span></td>
+    </tr>
+
+    <tr class="section-row"><td colspan="6">── 결측치 중간 (대체 + 결측여부 피처 생성)</td></tr>
+
+    <tr>
+      <td class="col-name">난자 채취 경과일</td>
+      <td class="num num-valid">198,863</td>
+      <td class="num num-missing">57,488</td>
+      <td class="num num-pct-mid">22.43%</td>
+      <td><div class="bar-bg"><div class="bar-fill" style="width:22.43%;background:#f59e0b"></div></div></td>
+      <td><span class="tag tag-impute-flag">중앙값+FLAG</span></td>
+    </tr>
+    <tr>
+      <td class="col-name">난자 혼합 경과일</td>
+      <td class="num num-valid">202,616</td>
+      <td class="num num-missing">53,735</td>
+      <td class="num num-pct-mid">20.96%</td>
+      <td><div class="bar-bg"><div class="bar-fill" style="width:20.96%;background:#f59e0b"></div></div></td>
+      <td><span class="tag tag-impute-flag">중앙값+FLAG</span></td>
+    </tr>
+    <tr>
+      <td class="col-name">배아 이식 경과일</td>
+      <td class="num num-valid">212,785</td>
+      <td class="num num-missing">43,566</td>
+      <td class="num num-pct-mid">16.99%</td>
+      <td><div class="bar-bg"><div class="bar-fill" style="width:16.99%;background:#f59e0b"></div></div></td>
+      <td><span class="tag tag-impute-flag">중앙값+FLAG</span></td>
+    </tr>
+
+    <tr class="section-row"><td colspan="6">── 결측치 낮음 (중앙값 대체)</td></tr>
+
+    <tr>
+      <td class="col-name">미세주입 후 저장된 배아 수</td>
+      <td class="num num-valid">250,060</td>
+      <td class="num num-missing">6,291</td>
+      <td class="num num-pct-low">2.45%</td>
+      <td><div class="bar-bg"><div class="bar-fill" style="width:2.45%;background:#3b82f6"></div></div></td>
+      <td><span class="tag tag-impute">중앙값 대체</span></td>
+    </tr>
+    <tr>
+      <td class="col-name">해동된 배아 수</td>
+      <td class="num num-valid">250,060</td>
+      <td class="num num-missing">6,291</td>
+      <td class="num num-pct-low">2.45%</td>
+      <td><div class="bar-bg"><div class="bar-fill" style="width:2.45%;background:#3b82f6"></div></div></td>
+      <td><span class="tag tag-impute">중앙값 대체</span></td>
+    </tr>
+    <tr>
+      <td class="col-name">저장된 배아 수</td>
+      <td class="num num-valid">250,060</td>
+      <td class="num num-missing">6,291</td>
+      <td class="num num-pct-low">2.45%</td>
+      <td><div class="bar-bg"><div class="bar-fill" style="width:2.45%;background:#3b82f6"></div></div></td>
+      <td><span class="tag tag-impute">중앙값 대체</span></td>
+    </tr>
+    <tr>
+      <td class="col-name">미세주입 배아 이식 수</td>
+      <td class="num num-valid">250,060</td>
+      <td class="num num-missing">6,291</td>
+      <td class="num num-pct-low">2.45%</td>
+      <td><div class="bar-bg"><div class="bar-fill" style="width:2.45%;background:#3b82f6"></div></div></td>
+      <td><span class="tag tag-impute">중앙값 대체</span></td>
+    </tr>
+    <tr>
+      <td class="col-name">대리모 여부</td>
+      <td class="num num-valid">250,060</td>
+      <td class="num num-missing">6,291</td>
+      <td class="num num-pct-low">2.45%</td>
+      <td><div class="bar-bg"><div class="bar-fill" style="width:2.45%;background:#3b82f6"></div></div></td>
+      <td><span class="tag tag-impute">중앙값 대체</span></td>
+    </tr>
+    <tr>
+      <td class="col-name">단일 배아 이식 여부</td>
+      <td class="num num-valid">250,060</td>
+      <td class="num num-missing">6,291</td>
+      <td class="num num-pct-low">2.45%</td>
+      <td><div class="bar-bg"><div class="bar-fill" style="width:2.45%;background:#3b82f6"></div></div></td>
+      <td><span class="tag tag-impute">중앙값 대체</span></td>
+    </tr>
+    <tr>
+      <td class="col-name">착상 전 유전 진단 사용 여부</td>
+      <td class="num num-valid">250,060</td>
+      <td class="num num-missing">6,291</td>
+      <td class="num num-pct-low">2.45%</td>
+      <td><div class="bar-bg"><div class="bar-fill" style="width:2.45%;background:#3b82f6"></div></div></td>
+      <td><span class="tag tag-impute">중앙값 대체</span></td>
+    </tr>
+    <tr>
+      <td class="col-name">배아 생성 주요 이유</td>
+      <td class="num num-valid">250,060</td>
+      <td class="num num-missing">6,291</td>
+      <td class="num num-pct-low">2.45%</td>
+      <td><div class="bar-bg"><div class="bar-fill" style="width:2.45%;background:#3b82f6"></div></div></td>
+      <td><span class="tag tag-impute">중앙값 대체</span></td>
+    </tr>
+    <tr>
+      <td class="col-name">미세주입에서 생성된 배아 수</td>
+      <td class="num num-valid">250,060</td>
+      <td class="num num-missing">6,291</td>
+      <td class="num num-pct-low">2.45%</td>
+      <td><div class="bar-bg"><div class="bar-fill" style="width:2.45%;background:#3b82f6"></div></div></td>
+      <td><span class="tag tag-impute">중앙값 대체</span></td>
+    </tr>
+    <tr>
+      <td class="col-name">이식된 배아 수</td>
+      <td class="num num-valid">250,060</td>
+      <td class="num num-missing">6,291</td>
+      <td class="num num-pct-low">2.45%</td>
+      <td><div class="bar-bg"><div class="bar-fill" style="width:2.45%;background:#3b82f6"></div></div></td>
+      <td><span class="tag tag-impute">중앙값 대체</span></td>
+    </tr>
+    <tr>
+      <td class="col-name">총 생성 배아 수</td>
+      <td class="num num-valid">250,060</td>
+      <td class="num num-missing">6,291</td>
+      <td class="num num-pct-low">2.45%</td>
+      <td><div class="bar-bg"><div class="bar-fill" style="width:2.45%;background:#3b82f6"></div></div></td>
+      <td><span class="tag tag-impute">중앙값 대체</span></td>
+    </tr>
+    <tr>
+      <td class="col-name">기증 배아 사용 여부</td>
+      <td class="num num-valid">250,060</td>
+      <td class="num num-missing">6,291</td>
+      <td class="num num-pct-low">2.45%</td>
+      <td><div class="bar-bg"><div class="bar-fill" style="width:2.45%;background:#3b82f6"></div></div></td>
+      <td><span class="tag tag-impute">중앙값 대체</span></td>
+    </tr>
+    <tr>
+      <td class="col-name">미세주입된 난자 수</td>
+      <td class="num num-valid">250,060</td>
+      <td class="num num-missing">6,291</td>
+      <td class="num num-pct-low">2.45%</td>
+      <td><div class="bar-bg"><div class="bar-fill" style="width:2.45%;background:#3b82f6"></div></div></td>
+      <td><span class="tag tag-impute">중앙값 대체</span></td>
+    </tr>
+    <tr>
+      <td class="col-name">혼합된 난자 수</td>
+      <td class="num num-valid">250,060</td>
+      <td class="num num-missing">6,291</td>
+      <td class="num num-pct-low">2.45%</td>
+      <td><div class="bar-bg"><div class="bar-fill" style="width:2.45%;background:#3b82f6"></div></div></td>
+      <td><span class="tag tag-impute">중앙값 대체</span></td>
+    </tr>
+    <tr>
+      <td class="col-name">해동 난자 수</td>
+      <td class="num num-valid">250,060</td>
+      <td class="num num-missing">6,291</td>
+      <td class="num num-pct-low">2.45%</td>
+      <td><div class="bar-bg"><div class="bar-fill" style="width:2.45%;background:#3b82f6"></div></div></td>
+      <td><span class="tag tag-impute">중앙값 대체</span></td>
+    </tr>
+    <tr>
+      <td class="col-name">수집된 신선 난자 수</td>
+      <td class="num num-valid">250,060</td>
+      <td class="num num-missing">6,291</td>
+      <td class="num num-pct-low">2.45%</td>
+      <td><div class="bar-bg"><div class="bar-fill" style="width:2.45%;background:#3b82f6"></div></div></td>
+      <td><span class="tag tag-impute">중앙값 대체</span></td>
+    </tr>
+    <tr>
+      <td class="col-name">파트너 정자와 혼합된 난자 수</td>
+      <td class="num num-valid">250,060</td>
+      <td class="num num-missing">6,291</td>
+      <td class="num num-pct-low">2.45%</td>
+      <td><div class="bar-bg"><div class="bar-fill" style="width:2.45%;background:#3b82f6"></div></div></td>
+      <td><span class="tag tag-impute">중앙값 대체</span></td>
+    </tr>
+    <tr>
+      <td class="col-name">기증자 정자와 혼합된 난자 수</td>
+      <td class="num num-valid">250,060</td>
+      <td class="num num-missing">6,291</td>
+      <td class="num num-pct-low">2.45%</td>
+      <td><div class="bar-bg"><div class="bar-fill" style="width:2.45%;background:#3b82f6"></div></div></td>
+      <td><span class="tag tag-impute">중앙값 대체</span></td>
+    </tr>
+    <tr>
+      <td class="col-name">신선 배아 사용 여부</td>
+      <td class="num num-valid">250,060</td>
+      <td class="num num-missing">6,291</td>
+      <td class="num num-pct-low">2.45%</td>
+      <td><div class="bar-bg"><div class="bar-fill" style="width:2.45%;background:#3b82f6"></div></div></td>
+      <td><span class="tag tag-impute">중앙값 대체</span></td>
+    </tr>
+    <tr>
+      <td class="col-name">저장된 신선 난자 수</td>
+      <td class="num num-valid">250,060</td>
+      <td class="num num-missing">6,291</td>
+      <td class="num num-pct-low">2.45%</td>
+      <td><div class="bar-bg"><div class="bar-fill" style="width:2.45%;background:#3b82f6"></div></div></td>
+      <td><span class="tag tag-impute">중앙값 대체</span></td>
+    </tr>
+    <tr>
+      <td class="col-name">동결 배아 사용 여부</td>
+      <td class="num num-valid">250,060</td>
+      <td class="num num-missing">6,291</td>
+      <td class="num num-pct-low">2.45%</td>
+      <td><div class="bar-bg"><div class="bar-fill" style="width:2.45%;background:#3b82f6"></div></div></td>
+      <td><span class="tag tag-impute">중앙값 대체</span></td>
+    </tr>
+
+    <tr class="section-row"><td colspan="6">── 결측치 없음 (유지)</td></tr>
+
+    <tr>
+      <td class="col-name">특정 시술 유형</td>
+      <td class="num num-valid">256,349</td>
+      <td class="num num-missing">2</td>
+      <td class="num num-pct-zero">0.00%</td>
+      <td><div class="bar-bg"><div class="bar-fill" style="width:0%;background:#475569"></div></div></td>
+      <td><span class="tag tag-keep">유지</span></td>
+    </tr>
+    <tr>
+      <td class="col-name">시술 당시 나이</td>
+      <td class="num num-valid">256,351</td>
+      <td class="num num-missing">0</td>
+      <td class="num num-pct-zero">0.00%</td>
+      <td><div class="bar-bg"></div></td>
+      <td><span class="tag tag-keep">유지</span></td>
+    </tr>
+    <tr>
+      <td class="col-name">시술 유형</td>
+      <td class="num num-valid">256,351</td>
+      <td class="num num-missing">0</td>
+      <td class="num num-pct-zero">0.00%</td>
+      <td><div class="bar-bg"></div></td>
+      <td><span class="tag tag-keep">유지</span></td>
+    </tr>
+    <tr>
+      <td class="col-name">배란 자극 여부</td>
+      <td class="num num-valid">256,351</td>
+      <td class="num num-missing">0</td>
+      <td class="num num-pct-zero">0.00%</td>
+      <td><div class="bar-bg"></div></td>
+      <td><span class="tag tag-keep">유지</span></td>
+    </tr>
+    <tr>
+      <td class="col-name">배란 유도 유형</td>
+      <td class="num num-valid">256,351</td>
+      <td class="num num-missing">0</td>
+      <td class="num num-pct-zero">0.00%</td>
+      <td><div class="bar-bg"></div></td>
+      <td><span class="tag tag-keep">유지</span></td>
+    </tr>
+    <tr>
+      <td class="col-name">남성 주/부 불임 원인</td>
+      <td class="num num-valid">256,351</td>
+      <td class="num num-missing">0</td>
+      <td class="num num-pct-zero">0.00%</td>
+      <td><div class="bar-bg"></div></td>
+      <td><span class="tag tag-keep">유지</span></td>
+    </tr>
+    <tr>
+      <td class="col-name">여성 주/부 불임 원인</td>
+      <td class="num num-valid">256,351</td>
+      <td class="num num-missing">0</td>
+      <td class="num num-pct-zero">0.00%</td>
+      <td><div class="bar-bg"></div></td>
+      <td><span class="tag tag-keep">유지</span></td>
+    </tr>
+    <tr>
+      <td class="col-name">부부 주/부 불임 원인</td>
+      <td class="num num-valid">256,351</td>
+      <td class="num num-missing">0</td>
+      <td class="num num-pct-zero">0.00%</td>
+      <td><div class="bar-bg"></div></td>
+      <td><span class="tag tag-keep">유지</span></td>
+    </tr>
+    <tr>
+      <td class="col-name">불명확 불임 원인</td>
+      <td class="num num-valid">256,351</td>
+      <td class="num num-missing">0</td>
+      <td class="num num-pct-zero">0.00%</td>
+      <td><div class="bar-bg"></div></td>
+      <td><span class="tag tag-keep">유지</span></td>
+    </tr>
+    <tr>
+      <td class="col-name">불임 원인 - 난관 질환</td>
+      <td class="num num-valid">256,351</td>
+      <td class="num num-missing">0</td>
+      <td class="num num-pct-zero">0.00%</td>
+      <td><div class="bar-bg"></div></td>
+      <td><span class="tag tag-keep">유지</span></td>
+    </tr>
+    <tr>
+      <td class="col-name">불임 원인 - 남성 요인</td>
+      <td class="num num-valid">256,351</td>
+      <td class="num num-missing">0</td>
+      <td class="num num-pct-zero">0.00%</td>
+      <td><div class="bar-bg"></div></td>
+      <td><span class="tag tag-keep">유지</span></td>
+    </tr>
+    <tr>
+      <td class="col-name">불임 원인 - 배란 장애</td>
+      <td class="num num-valid">256,351</td>
+      <td class="num num-missing">0</td>
+      <td class="num num-pct-zero">0.00%</td>
+      <td><div class="bar-bg"></div></td>
+      <td><span class="tag tag-keep">유지</span></td>
+    </tr>
+    <tr>
+      <td class="col-name">불임 원인 - 자궁내막증</td>
+      <td class="num num-valid">256,351</td>
+      <td class="num num-missing">0</td>
+      <td class="num num-pct-zero">0.00%</td>
+      <td><div class="bar-bg"></div></td>
+      <td><span class="tag tag-keep">유지</span></td>
+    </tr>
+    <tr>
+      <td class="col-name">불임 원인 - 정자 농도/운동성/형태</td>
+      <td class="num num-valid">256,351</td>
+      <td class="num num-missing">0</td>
+      <td class="num num-pct-zero">0.00%</td>
+      <td><div class="bar-bg"></div></td>
+      <td><span class="tag tag-keep">유지</span></td>
+    </tr>
+    <tr>
+      <td class="col-name">총/IVF/DI 시술·임신·출산 횟수</td>
+      <td class="num num-valid">256,351</td>
+      <td class="num num-missing">0</td>
+      <td class="num num-pct-zero">0.00%</td>
+      <td><div class="bar-bg"></div></td>
+      <td><span class="tag tag-keep">유지</span></td>
+    </tr>
+    <tr>
+      <td class="col-name">난자 출처 / 정자 출처</td>
+      <td class="num num-valid">256,351</td>
+      <td class="num num-missing">0</td>
+      <td class="num num-pct-zero">0.00%</td>
+      <td><div class="bar-bg"></div></td>
+      <td><span class="tag tag-keep">유지</span></td>
+    </tr>
+    <tr>
+      <td class="col-name">난자/정자 기증자 나이</td>
+      <td class="num num-valid">256,351</td>
+      <td class="num num-missing">0</td>
+      <td class="num num-pct-zero">0.00%</td>
+      <td><div class="bar-bg"></div></td>
+      <td><span class="tag tag-keep">유지</span></td>
+    </tr>
+    <tr>
+      <td class="col-name">임신 성공 여부 (타겟)</td>
+      <td class="num num-valid">256,351</td>
+      <td class="num num-missing">0</td>
+      <td class="num num-pct-zero">0.00%</td>
+      <td><div class="bar-bg"></div></td>
+      <td><span class="tag tag-keep">타겟</span></td>
+    </tr>
+
+  </tbody>
+</table>
+</body>
+</html>

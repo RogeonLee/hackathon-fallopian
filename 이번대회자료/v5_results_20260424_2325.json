@@ -1,0 +1,20 @@
+{
+  "timestamp": "20260424_2325",
+  "best_config": "rank_weighted",
+  "best_oof_auc": 0.7407440395270307,
+  "v4_baseline": 0.74033,
+  "delta_vs_v4": 0.00041403952703067404,
+  "all_model_aucs": {
+    "lgbm_base": 0.7403305965663929,
+    "lgbm_tuned": 0.7405289130286122,
+    "catboost": 0.7405289130286122,
+    "xgboost": 0.7403926693224382,
+    "meta": 0.7406802290066994
+  },
+  "ensemble_aucs": {
+    "simple_avg": 0.7407404182648327,
+    "rank_weighted": 0.7407440395270307,
+    "meta_only": 0.7406802290066994,
+    "best_single": 0.7406802290066994
+  }
+}
